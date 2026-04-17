@@ -2,90 +2,21 @@
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>שלט חכם - משיקום לאוטומציה</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>משיקום לאוטומציה - המצגת המלאה</title>
+    <!-- שימוש ב-CSS בלבד כדי להימנע מהתראות CDN בקונסול -->
+    <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;700&display=swap" rel="stylesheet">
     <link rel="icon" href="data:,">
     
-    <style>
-        body {
-            font-family: 'Assistant', sans-serif;
-            background: #0f172a;
-            color: #f1f5f9;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
-            touch-action: manipulation;
-        }
-
-        .glass {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .note-card {
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-            border-radius: 24px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(59, 130, 246, 0.2);
-            transition: all 0.3s ease;
-        }
-
-        .nav-btn {
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .nav-btn:active {
-            filter: brightness(1.5);
-            background: rgba(59, 130, 246, 0.1);
-            transform: scale(0.98);
-        }
-
-        .nav-btn.next {
-            background: rgba(59, 130, 246, 0.05);
-            border-left: 1px solid rgba(59, 130, 246, 0.2);
-        }
-
-        .nav-btn.prev {
-            background: rgba(30, 41, 59, 0.3);
-            width: 30%;
-        }
-
-        .pulse-border {
-            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
-            70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
-        }
-
-        .progress-bar {
-            height: 4px;
-            background: #3b82f6;
-            transition: width 0.3s ease;
-        }
-    </style>
-
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
+        // --- כאן יש להזין את הגדרות ה-Firebase שלך ---
+        // ניתן למצוא אותן ב-Firebase Console -> Project Settings
         const firebaseConfig = {
             apiKey: "AIzaSyAjsMGgDbat6Tz_LX0MKsk6-yQk83mwb4s",
             authDomain: "presentation-36598.firebaseapp.com",
@@ -95,151 +26,502 @@
             appId: "1:401943487076:web:68fcdeb4951bd505a07571",
             measurementId: "G-WF17KMEE70"
         };
+        // -------------------------------------------
 
-        let db;
-        let currentSlide = 0;
-        const totalSlides = 14;
-        const appId = 'rehab-presentation';
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        
+        // שימוש במזהה האפליקציה של הסביבה לפתרון בעיות הרשאה
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'rehab-presentation';
 
-        const reminders = [
-            "היום אני רוצה לקחת אתכם למסע שעברתי - מהמיטה בבית החולים ועד לעולם האוטומציה.",
-            "פברואר 2019 שינה את הכל. תאונת אופנוע, פגיעת ראש, שברים ולסת מקובעת. שם התחילה הבחירה.",
-            "מהרגע הראשון התייחסתי לשיקום כאל פרויקט - בלי הנחות, רק לאתגר את הגבולות.",
-            "אף אחד לא עובר מסע כזה לבד. המשפחה, אלינה והחברים הם הרוח הגבית שלי.",
-            "הנחישות נמדדת בשעות באוטובוסים - בין חולון לתל השומר, העיקר לא להפסיק לנסוע.",
-            "גם כשהייתי כבר 'סטודנט', הבאלגן הפנימי הציף הכל. זה בסדר להרגיש שקשה, העיקר להבין מתי לשנות כיוון.",
-            "מכישלון במבחנים לצמיחה בתואר בטכנולוגיות למידה. לפעמים לשנות מסלול זו ההחלטה הכי אסטרטגית.",
-            "במכירות למדתי ששיקום הוא גם תקשורת. לצאת מאזור הנוחות וללמוד להקשיב באמת.",
-            "הבית הוא המקום שבו אני נטען - אלינה ולוסי הן הסיבות לקום ולחייך בכל בוקר.",
-            "בקהילת אור מצאתי שאני כבר לא רק 'נתמך' - אני יכול לתרום מהניסיון שלי לאחרים.",
-            "ה-AI הוא לא רק כלי טכני, הוא השותף שלי לניהול עומסים ולייעול החיים.",
-            "היום אני מחבר בין העסק המשפחתי לטכנולוגיה - להביא את העתיד לשטח.",
-            "כשחזרתי לנגן ולשיר, הבנתי שהשיקום הושלם. זו גרסה 2.0 שלי.",
-            "תודות: תודה לכם. הכל יהיה בסדר - כל עוד אנחנו בוחרים להמשיך לבנות."
-        ];
-
-        async function initRemote() {
+        async function initRemoteControl() {
+            // תיקון אוטומטי לבעיית דומיין של פיירבייס
             if (window.location.hostname === '127.0.0.1') {
+                console.log("Redirecting from 127.0.0.1 to localhost for Firebase Auth...");
                 window.location.hostname = 'localhost';
                 return;
             }
 
             try {
-                const app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                const auth = getAuth(app);
-                
-                signInAnonymously(auth).then(() => console.log("Connected")).catch(e => console.error(e));
+                console.log("Step 1: Starting Firebase Auth (Non-blocking)...");
+                // שלב 1: אימות (Auth) - הפכנו ללא-חוסם כדי שהמצגת תעלה גם אם יש עיכוב בפיירבייס
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    signInWithCustomToken(auth, __initial_auth_token).catch(e => console.error("Custom Token Error:", e));
+                } else {
+                    signInAnonymously(auth).then(() => console.log("Auth Successful (Anonymous)")).catch(e => console.error("Anonymous Auth Error:", e));
+                }
 
-                const remoteDoc = doc(db, 'artifacts', appId, 'public', 'data', 'remote_control', 'status');
-                onSnapshot(remoteDoc, (snapshot) => {
-                    if (snapshot.exists()) {
-                        const data = snapshot.data();
-                        if (data && typeof data.slideIndex === 'number') {
-                            updateUI(data.slideIndex);
-                        }
+                console.log("Step 2: Setting up Auth State Observer...");
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        console.log("Step 3: Auth State ACTIVE, listening to Firestore...");
+                        // שלב 2: האזנה למסמך (נתיב של 6 מקטעים לפי הכללים)
+                        const remoteDoc = doc(db, 'artifacts', appId, 'public', 'data', 'remote_control', 'status');
+                        console.log("Step 4: Monitoring document path:", remoteDoc.path);
+                        
+                        onSnapshot(remoteDoc, (snapshot) => {
+                            if (snapshot.exists()) {
+                                const data = snapshot.data();
+                                console.log("Step 5: New Data received from Firestore:", data);
+                                if (data && typeof data.slideIndex === 'number') {
+                                    if (window.goToSlide) {
+                                        console.log("Step 6: Executing goToSlide(" + data.slideIndex + ")");
+                                        window.goToSlide(data.slideIndex);
+                                    } else {
+                                        console.warn("Step 6: window.goToSlide not yet defined!");
+                                    }
+                                }
+                            } else {
+                                console.log("Step 5: Document does not exist yet.");
+                            }
+                        }, (error) => {
+                            console.error("Firebase Snapshot Error:", error);
+                        });
+                    } else {
+                        console.log("Step 3: Auth State INACTIVE (Signed out or pending)");
                     }
                 });
-
-                document.getElementById('loading').classList.add('hidden');
-                document.getElementById('remote-ui').classList.remove('hidden');
             } catch (error) {
-                console.error(error);
+                console.error("Firebase Initialization Error:", error);
             }
         }
 
-        function updateUI(index) {
-            currentSlide = index;
-            document.getElementById('slide-number').textContent = `${index + 1} / ${totalSlides}`;
-            document.getElementById('reminder-text').textContent = reminders[index] || "אין תזכורת לשקף זה.";
-            document.getElementById('progress').style.width = `${((index + 1) / totalSlides) * 100}%`;
-            
-            if (navigator.vibrate) navigator.vibrate(25);
-        }
-
-        window.updateSlide = async function(direction) {
-            let nextIndex = currentSlide;
-            if (direction === 'next' && currentSlide < totalSlides - 1) nextIndex++;
-            if (direction === 'prev' && currentSlide > 0) nextIndex--;
-            
-            if (nextIndex !== currentSlide) {
-                try {
-                    const remoteDoc = doc(db, 'artifacts', appId, 'public', 'data', 'remote_control', 'status');
-                    await setDoc(remoteDoc, { 
-                        slideIndex: nextIndex,
-                        timestamp: Date.now()
-                    }, { merge: true });
-                } catch (e) {
-                    console.error(e);
-                }
-            }
-        };
-
-        window.addEventListener('load', initRemote);
+        window.addEventListener('load', () => {
+            console.log("Page loaded, starting Remote Control...");
+            initRemoteControl();
+        });
     </script>
+
+    <style>
+        body {
+            font-family: 'Assistant', sans-serif;
+            overflow: hidden;
+            background: #0f172a;
+            color: #f8fafc;
+        }
+        .slide {
+            display: none;
+            height: 100vh;
+            width: 100vw;
+            padding: 2rem 4rem;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            text-align: right;
+            transition: opacity 0.5s ease;
+        }
+        .slide.active {
+            display: flex;
+            animation: fadeIn 0.4s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .content-area {
+            flex: 1;
+            max-width: 60%;
+        }
+        .image-area {
+            flex: 1;
+            margin-right: 2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .image-placeholder, .image-content {
+            width: 100%;
+            max-width: 500px;
+            aspect-ratio: 16/9;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+        }
+        .image-placeholder {
+            border: 2px dashed #3b82f6;
+            background: rgba(59, 130, 246, 0.05);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 1rem;
+            color: #60a5fa;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        .image-content img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .progress-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            height: 8px;
+            background: #3b82f6;
+            transition: width 0.3s ease;
+            z-index: 50;
+        }
+        .point {
+            border-right: 5px solid #3b82f6;
+            padding-right: 1.5rem;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+            line-height: 1.4;
+        }
+        .nav-buttons {
+            position: fixed;
+            bottom: 40px;
+            left: 40px;
+            display: flex;
+            gap: 0.75rem;
+            z-index: 100;
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(12px);
+            padding: 0.75rem;
+            border-radius: 100px;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .nav-btn {
+            background: rgba(51, 65, 85, 0.8);
+            color: white;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 50%;
+            font-weight: bold;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .nav-btn:hover {
+            background: #3b82f6;
+            transform: translateY(-2px);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+            border-color: #60a5fa;
+        }
+        .nav-btn:active {
+            transform: translateY(0);
+        }
+        .nav-btn svg {
+            width: 24px;
+            height: 24px;
+            stroke: currentColor;
+            stroke-width: 2.5;
+            fill: none;
+        }
+        /* Mobile adjustment */
+        @media (max-width: 768px) {
+            .nav-buttons {
+                bottom: 20px;
+                left: 20px;
+                padding: 0.5rem;
+            }
+            .nav-btn {
+                width: 40px;
+                height: 40px;
+            }
+        }
+        .slide-counter {
+            display: flex;
+            align-items: center;
+            font-weight: bold;
+            color: #60a5fa;
+            font-size: 1.1rem;
+            min-width: 60px;
+            justify-content: center;
+            font-family: monospace;
+            direction: ltr; /* Ensure numbers and slashes stay in order */
+        }
+        .highlight {
+            color: #60a5fa;
+            font-weight: bold;
+        }
+        .medical-tag {
+            background: rgba(239, 68, 68, 0.1);
+            color: #f87171;
+            padding: 0.1rem 0.5rem;
+            border-radius: 4px;
+            font-size: 1.1rem;
+            margin-left: 0.5rem;
+        }
+        .remote-status {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            align-items: center;
+            z-index: 1000;
+        }
+    </style>
 </head>
-<body class="antialiased select-none">
+<body>
 
-    <!-- Loading Screen -->
-    <div id="loading" class="fixed inset-0 z-50 flex items-center justify-center bg-[#0f172a]">
-        <div class="text-center">
-            <div class="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
-            <p class="text-blue-400 font-bold text-xl">מתחבר למערכת השלט...</p>
+    <!-- נקודת אינדיקציה לחיבור -->
+    <div class="remote-status">
+        <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_#22c55e]"></div>
+    </div>
+
+    <!-- שקף 1: פתיחה -->
+    <div class="slide active">
+        <div class="content-area">
+            <h1 class="text-7xl font-bold mb-6">משיקום לאוטומציה</h1>
+            <p class="text-3xl text-blue-400">מסע של בחירה, נחישות וטכנולוגיה</p>
+        </div>
+        <div class="image-area">
+            <div class="image-content">
+                <img src="motorcycle_pristine_1776404507786.png" alt="Motorcycle Pristine">
+            </div>
         </div>
     </div>
 
-    <!-- Main Remote UI -->
-    <div id="remote-ui" class="hidden flex flex-col h-full w-full">
-        
-        <!-- Header Info -->
-        <div class="p-6 glass flex justify-between items-center z-10">
-            <div class="flex items-center gap-3">
-                <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_#22c55e]"></div>
-                <span class="text-sm font-bold text-slate-400 tracking-wider">מחובר למצגת</span>
+    <!-- שקף 2: דוח נזק -->
+    <div class="slide">
+        <div class="content-area">
+            <h2 class="text-5xl font-bold mb-10 text-blue-400">ההתרסקות: דוח נזק</h2>
+            <div class="point">פברואר 2019: תאונת אופנוע קשה ושלושה חודשי אשפוז בשיקום מלא.</div>
+            <div class="point">
+                <span class="medical-tag">פגיעת ראש</span> דימום מוחי.
             </div>
-            <div id="slide-number" class="text-xl font-bold font-mono text-blue-400">1 / 14</div>
-        </div>
-
-        <div class="fixed top-[72px] left-0 w-full z-10">
-            <div id="progress" class="progress-bar" style="width: 7%;"></div>
-        </div>
-
-        <!-- Speaker Notes & Reminder Area -->
-        <div class="flex-grow p-6 flex flex-col items-center justify-center mt-4">
-            <div class="note-card w-full p-8 min-h-[180px] flex items-center justify-center text-center relative">
-                <div class="absolute -top-3 right-8 bg-blue-600 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">תזכורת למרצה</div>
-                <p id="reminder-text" class="text-2xl font-light leading-snug text-slate-100">
-                    טוען תזכורות...
-                </p>
+            <div class="point">
+                <span class="medical-tag">שבר בלסת</span> ניתוח וקיבוע.
+            </div>
+            <div class="point">
+                <span class="medical-tag">כריתת טחול</span>
             </div>
         </div>
-
-        <!-- Controls Area -->
-        <div class="h-[45%] flex w-full">
-            <!-- Prev Button -->
-            <button onclick="updateSlide('prev')" class="nav-btn prev">
-                <div class="flex flex-col items-center opacity-40">
-                    <svg class="w-10 h-10 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                    <span class="text-sm font-bold uppercase tracking-widest">הקודם</span>
-                </div>
-            </button>
-
-            <!-- Next Button (Main) -->
-            <button onclick="updateSlide('next')" class="nav-btn next flex-grow">
-                <div class="flex flex-col items-center">
-                    <div class="w-20 h-20 glass rounded-full flex items-center justify-center mb-4 pulse-border border-blue-500/30">
-                        <svg class="w-12 h-12 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 15l7-7 7 7"></path></svg>
-                    </div>
-                    <span class="text-2xl font-bold text-blue-400 uppercase tracking-widest">השקף הבא</span>
-                </div>
-            </button>
-        </div>
-
-        <!-- Help/Footer -->
-        <div class="p-4 glass text-center text-[10px] text-slate-500 uppercase tracking-[0.2em]">
-            משיקום לאוטומציה &copy; 2026 | שלט חכם מבוסס ענן
+        <div class="image-area">
+            <div class="image-content">
+                <img src="hospital_corridor_dramatic_1776404524773.png" alt="Hospital Corridor">
+            </div>
         </div>
     </div>
 
+    <!-- שקף 3: תוכנית עבודה -->
+    <div class="slide">
+        <div class="content-area">
+            <h2 class="text-5xl font-bold mb-12 text-blue-400">המחשבה: "הכי מהר והכי טוב"</h2>
+            <div class="point">ניהול השיקום כפרויקט כבר מהמיטה בבית החולים.</div>
+            <div class="point">אימון מוחי: שימוש באפליקציות לתרגול קוגניטיבי ולמידה מחדש.</div>
+            <div class="point">חזרה למקורות: תרגול גיטרה ושירה לשיפור המוטוריקה.</div>
+            <div class="point">אורי הפיזיותרפיסט: "אל תוותר לי, תאתגר אותי יותר".</div>
+        </div>
+        <div class="image-area">
+            <div class="image-placeholder">[תמונה שלך עם גיטרה בשיקום]</div>
+        </div>
+    </div>
+
+    <!-- שקף 4: מעגלי תמיכה -->
+    <div class="slide">
+        <div class="content-area">
+            <h2 class="text-5xl font-bold mb-10 text-blue-400">הכוח שדוחף קדימה</h2>
+            <div class="point">המשפחה ואמא: היו שם מהשנייה הראשונה, חיפשו פתרונות ודחפו אותי.</div>
+            <div class="point">אלינה: העוגן והשותפה לדרך שהצטרפה בהמשך והפכה לכוח המרכזי שדוחף קדימה.</div>
+            <div class="point">החברים מהיסודי: החבורה שנשארה איתי מההתחלה ודאגה שלא אוותר.</div>
+            <div class="point">תמיכה עקבית: האנשים שהאמינו בי גם ברגעים הקשים.</div>
+            <div class="point"><span class="highlight">הכרת תודה על הרוח הגבית שאפשרה לי להתמקד בבנייה.</span></div>
+        </div>
+        <div class="image-area">
+            <div class="image-placeholder">[תמונה עם החברים או עם המשפחה]</div>
+        </div>
+    </div>
+
+    <!-- שקף 5: לוגיסטיקה -->
+    <div class="slide">
+        <div class="content-area">
+            <h2 class="text-5xl font-bold mb-10 text-blue-400">המלחמה על השגרה: אוטובוסים</h2>
+            <div class="point">חזרה ללימודים במקביל לשיקום יום בתל השומר ובמכון רקנאטי.</div>
+            <div class="point"><span class="highlight">ללא רישיון נהיגה:</span> מסעות יומיים מפרכים.</div>
+            <div class="point italic text-blue-300">חולון (HIT) ↔ תל השומר ↔ תל אביב (מכון רקנאטי).</div>
+            <div class="point">נחישות נמדדת ביכולת להגיע ליעד בכל מחיר.</div>
+        </div>
+        <div class="image-area">
+            <div class="image-content">
+                <img src="bus_station_night_1776404537943.png" alt="Bus Station at Night">
+            </div>
+        </div>
+    </div>
+
+    <!-- שקף 6: נקודת שפל -->
+    <div class="slide">
+        <div class="content-area">
+            <h2 class="text-5xl font-bold mb-10 text-blue-400">נקודת השפל</h2>
+            <div class="point">המשבר הגיע תוכדי הניסיון לחזור לחיים הסטודנטיאליים.</div>
+            <div class="point">הלימודים בחולון: קושי חברתי ותחושת חוסר שייכות.</div>
+            <div class="point">המחשבה ש"לא רציתי לחיות": כשהבלאגן הפנימי הציף הכל.</div>
+        </div>
+        <div class="image-area">
+            <div class="image-placeholder">[תמונה סמלית של מסדרון ריק בקמפוס]</div>
+        </div>
+    </div>
+
+    <!-- שקף 7: שינוי מסלול -->
+    <div class="slide">
+        <div class="content-area">
+            <h2 class="text-5xl font-bold mb-12 text-blue-400">ניהול משאבים: שינוי מסלול אסטרטגי</h2>
+            <div class="point">המבחנים שלא הצלחתי לעבור <span class="highlight">- וההבנה שצריך לשנות כיוון</span>.</div>
+            <div class="point">לא מוותרים על השכלה: מעבר לתואר בטכנולוגיות למידה.</div>
+            <div class="point">סיום התואר בהצלחה ותחילת הדרך כמפתח למידה.</div>
+        </div>
+        <div class="image-area">
+            <div class="image-placeholder">[תעודת התואר או תמונה מהלימודים]</div>
+        </div>
+    </div>
+
+    <!-- שקף 8: מכירות -->
+    <div class="slide">
+        <div class="content-area">
+            <h2 class="text-5xl font-bold mb-12 text-blue-400">מכירות: יציאה מאזור הנוחות</h2>
+            <div class="point">האולטימטום למנהל: "אני עובר למכירות - או עוזב".</div>
+            <div class="point">זיו המנטור: למידה איך להקשיב, לייעץ ולעבוד עם אנשים.</div>
+            <div class="point">ביטחון עצמי שנבנה דרך אינטראקציה יומיומית מאתגרת.</div>
+        </div>
+        <div class="image-area">
+            <div class="image-placeholder">[תמונה שלך בעבודה במכירות או עם זיו]</div>
+        </div>
+    </div>
+
+    <!-- שקף 9: אלינה ולוסי -->
+    <div class="slide">
+        <div class="content-area">
+            <h2 class="text-5xl font-bold mb-12 text-blue-400">הבית: אלינה ולוסי</h2>
+            <div class="point">אלינה: העוגן והשותפה לדרך לאורך כל המשברים והשיקום.</div>
+            <div class="point">לוסי הכלבה: האנרגיה, הנאמנות והסיבה לקום כל בוקר.</div>
+            <div class="point">הבנה ששיקום דורש מערכת תמיכה יציבה ואוהבת.</div>
+        </div>
+        <div class="image-area">
+            <div class="image-placeholder">[תמונה שלך עם אלינה ולוסי]</div>
+        </div>
+    </div>
+
+    <!-- שקף 10: קהילת אור -->
+    <div class="slide">
+        <div class="content-area">
+            <h2 class="text-5xl font-bold mb-12 text-blue-400">קהילת אור: הכוח שבשיתוף</h2>
+            <div class="point">עמותה לנפגעי פגיעות מוחיות - מקום שמרגיש כמו בית ומשפחה.</div>
+            <div class="point">שיתוף חוויות מהשיקום: למידה הדדית מהדרך ומהניסיון של כל אחד.</div>
+            <div class="point">התנדבות וחיבור: המקום שבו אני מוצא משמעות בלתת חזרה ולחזק אחרים.</div>
+        </div>
+        <div class="image-area">
+            <div class="image-content">
+                <img src="or_community_light_hope_1776406737084.png" alt="קהילת אור - הכוח בשיתוף">
+            </div>
+        </div>
+    </div>
+
+    <!-- שקף 11: AI -->
+    <div class="slide">
+        <div class="content-area">
+            <h2 class="text-5xl font-bold mb-12 text-blue-400">שימוש אינטנסיבי ב-AI</h2>
+            <div class="point">אימוץ ה-AI כשותף לעבודה וככלי לשיפור ביצועים יומיומי.</div>
+            <div class="point">ייעול תהליכי פיתוח, שיווק ומכירות במהירות שיא.</div>
+            <div class="point">צמצום בלאגן ואופטימיזציה של זמן ואנרגיה.</div>
+        </div>
+        <div class="image-area">
+            <div class="image-content">
+                <img src="ai_system_abstract_1776404558210.png" alt="AI Abstract System">
+            </div>
+        </div>
+    </div>
+
+    <!-- שקף 12: עשייה עסקית -->
+    <div class="slide">
+        <div class="content-area">
+            <h2 class="text-5xl font-bold mb-12 text-blue-400">היישום העסקי היום</h2>
+            <div class="point">עסקים משפחתיים: שיווק ומכירות אצל אבא ודוד.</div>
+            <div class="point">פיתוח מערכות ניהול לייעול ואוטומציה של העסק.</div>
+            <div class="point">שילוב של ניסיון עסקי מהשטח וכלים טכנולוגיים.</div>
+        </div>
+        <div class="image-area">
+            <div class="image-placeholder">[תמונה של המחסן של אבא או מערכת ניהול שבנית]</div>
+        </div>
+    </div>
+
+    <!-- שקף 13: מוזיקה -->
+    <div class="slide">
+        <div class="content-area">
+            <h2 class="text-5xl font-bold mb-12 text-blue-400">סגירת מעגל: מוזיקה וקול</h2>
+            <div class="point">הגיטרה: אימון שהתחיל בבית החולים והגיע לרמה גבוהה.</div>
+            <div class="point">חזרת הקול: היכולת להביע את עצמי מחדש בעוצמה.</div>
+            <div class="point"><span class="highlight">הוכחה חיה לשיקום מוצלח: גרסה 2.0.</span></div>
+        </div>
+        <div class="image-area">
+            <div class="image-placeholder">[תמונה שלך מנגן בגיטרה היום]</div>
+        </div>
+    </div>
+
+    <!-- שקף 14: סיום -->
+    <div class="slide">
+        <div class="content-area">
+            <h1 class="text-7xl font-bold mb-8 italic">"הכל יהיה בסדר"</h1>
+            <p class="text-2xl text-slate-400 mb-10">תודה על ההקשבה.</p>
+            <div class="p-8 bg-blue-600/20 rounded-xl border-2 border-blue-500 text-3xl font-bold inline-block">
+                🎸 זמן לנגן והשיר
+            </div>
+        </div>
+        <div class="image-area">
+            <div class="image-content">
+                <img src="victory_silhouette_sunset_1776404574862.png" alt="Victory Silhouette">
+            </div>
+        </div>
+    </div>
+
+    <div class="progress-bar" id="progress"></div>
+    
+    <div class="nav-buttons">
+        <button class="nav-btn" onclick="nextSlide()" title="הבא">
+            <svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+        <div class="slide-counter" id="slideCounter">1 / 14</div>
+        <button class="nav-btn" onclick="prevSlide()" title="הקודם">
+            <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const progressBar = document.getElementById('progress');
+        const slideCounter = document.getElementById('slideCounter');
+        let currentSlide = 0;
+
+        function showSlide(index) {
+            if (index < 0 || index >= slides.length) return;
+            currentSlide = index;
+            slides.forEach((slide, i) => {
+                slide.classList.toggle('active', i === index);
+            });
+            const progress = ((index + 1) / slides.length) * 100;
+            progressBar.style.width = `${progress}%`;
+            if (slideCounter) {
+                slideCounter.textContent = `${index + 1} / ${slides.length}`;
+            }
+        }
+
+        window.goToSlide = showSlide;
+
+        function nextSlide() {
+            if (currentSlide < slides.length - 1) {
+                showSlide(currentSlide + 1);
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                showSlide(currentSlide - 1);
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+            if (e.key === 'ArrowLeft') prevSlide();
+        });
+    </script>
 </body>
 </html>
