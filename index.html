@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>האלגוריתם של השיקום - המצגת המלאה</title>
+    <title>משיקום לאוטומציה - המצגת המלאה</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;700&display=swap" rel="stylesheet">
     
@@ -13,16 +13,18 @@
         import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-        // הגדרות Firebase
+        // הגדרות Firebase מהסביבה
         const firebaseConfig = JSON.parse(__firebase_config);
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
+        
+        // שימוש במזהה האפליקציה של הסביבה לפתרון בעיות הרשאה
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'rehab-presentation';
 
         async function initRemoteControl() {
             try {
-                // שלב ראשון: התחברות
+                // שלב 1: אימות (Auth) לפני שאילתות
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     await signInWithCustomToken(auth, __initial_auth_token);
                 } else {
@@ -31,18 +33,22 @@
 
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
-                        // האזנה למסמך הסטטוס (נתיב של 6 מקטעים למניעת שגיאה)
+                        // שלב 2: האזנה למסמך (נתיב של 6 מקטעים לפי הכללים)
                         const remoteDoc = doc(db, 'artifacts', appId, 'public', 'data', 'remote_control', 'status');
                         onSnapshot(remoteDoc, (snapshot) => {
-                            const data = snapshot.data();
-                            if (data && typeof data.slideIndex === 'number') {
-                                window.goToSlide(data.slideIndex);
+                            if (snapshot.exists()) {
+                                const data = snapshot.data();
+                                if (data && typeof data.slideIndex === 'number') {
+                                    window.goToSlide(data.slideIndex);
+                                }
                             }
-                        }, (error) => console.error("Firebase Snapshot Error:", error));
+                        }, (error) => {
+                            console.error("Firebase Snapshot Error:", error);
+                        });
                     }
                 });
             } catch (error) {
-                console.error("Firebase Auth Error:", error);
+                console.error("Firebase Initialization Error:", error);
             }
         }
 
@@ -86,21 +92,30 @@
             justify-content: center;
             align-items: center;
         }
-        .image-placeholder {
+        .image-placeholder, .image-content {
             width: 100%;
-            max-width: 450px;
-            aspect-ratio: 4/3;
+            max-width: 500px;
+            aspect-ratio: 16/9;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+        }
+        .image-placeholder {
             border: 2px dashed #3b82f6;
             background: rgba(59, 130, 246, 0.05);
             display: flex;
             justify-content: center;
             align-items: center;
             text-align: center;
-            padding: 2rem;
-            border-radius: 12px;
+            padding: 1rem;
             color: #60a5fa;
             font-weight: bold;
             font-size: 1.2rem;
+        }
+        .image-content img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
         .progress-bar {
             position: fixed;
@@ -120,24 +135,72 @@
         }
         .nav-buttons {
             position: fixed;
-            bottom: 30px;
-            left: 30px;
+            bottom: 40px;
+            left: 40px;
             display: flex;
-            gap: 1rem;
+            gap: 0.75rem;
             z-index: 100;
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(12px);
+            padding: 0.75rem;
+            border-radius: 100px;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
-        button {
-            background: #1e293b;
+        .nav-btn {
+            background: rgba(51, 65, 85, 0.8);
             color: white;
-            padding: 0.6rem 1.2rem;
-            border-radius: 8px;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 50%;
             font-weight: bold;
-            border: 1px solid #334155;
+            border: 1px solid rgba(59, 130, 246, 0.3);
             cursor: pointer;
-            transition: background 0.2s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
         }
-        button:hover {
-            background: #334155;
+        .nav-btn:hover {
+            background: #3b82f6;
+            transform: translateY(-2px);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+            border-color: #60a5fa;
+        }
+        .nav-btn:active {
+            transform: translateY(0);
+        }
+        .nav-btn svg {
+            width: 24px;
+            height: 24px;
+            stroke: currentColor;
+            stroke-width: 2.5;
+            fill: none;
+        }
+        /* Mobile adjustment */
+        @media (max-width: 768px) {
+            .nav-buttons {
+                bottom: 20px;
+                left: 20px;
+                padding: 0.5rem;
+            }
+            .nav-btn {
+                width: 40px;
+                height: 40px;
+            }
+        }
+        .slide-counter {
+            display: flex;
+            align-items: center;
+            font-weight: bold;
+            color: #60a5fa;
+            font-size: 1.1rem;
+            min-width: 60px;
+            justify-content: center;
+            font-family: monospace;
+            direction: ltr; /* Ensure numbers and slashes stay in order */
         }
         .highlight {
             color: #60a5fa;
@@ -163,7 +226,7 @@
 </head>
 <body>
 
-    <!-- אינדיקציה לחיבור שלט -->
+    <!-- נקודת אינדיקציה לחיבור -->
     <div class="remote-status">
         <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_#22c55e]"></div>
     </div>
@@ -171,11 +234,13 @@
     <!-- שקף 1: פתיחה -->
     <div class="slide active">
         <div class="content-area">
-            <h1 class="text-7xl font-bold mb-6">האלגוריתם של השיקום</h1>
+            <h1 class="text-7xl font-bold mb-6">משיקום לאוטומציה</h1>
             <p class="text-3xl text-blue-400">מסע של בחירה, נחישות וטכנולוגיה</p>
         </div>
         <div class="image-area">
-            <div class="image-placeholder">[תמונה שלך עם אופנוע לפני התאונה]</div>
+            <div class="image-content">
+                <img src="motorcycle_pristine_1776404507786.png" alt="Motorcycle Pristine">
+            </div>
         </div>
     </div>
 
@@ -195,11 +260,13 @@
             </div>
         </div>
         <div class="image-area">
-            <div class="image-placeholder">[תמונה של האופנוע אחרי התאונה או תמונה סמלית של בית החולים]</div>
+            <div class="image-content">
+                <img src="hospital_corridor_dramatic_1776404524773.png" alt="Hospital Corridor">
+            </div>
         </div>
     </div>
 
-    <!-- שקף 3: תוכנית עבודה ראשונית -->
+    <!-- שקף 3: תוכנית עבודה -->
     <div class="slide">
         <div class="content-area">
             <h2 class="text-5xl font-bold mb-12 text-blue-400">המחשבה: "הכי מהר והכי טוב"</h2>
@@ -209,11 +276,11 @@
             <div class="point">אורי הפיזיותרפיסט: "אל תוותר לי, תאתגר אותי יותר".</div>
         </div>
         <div class="image-area">
-            <div class="image-placeholder">[תמונה שלך עם גיטרה בשיקום או צילום מסך של אפליקציית אימון מוח]</div>
+            <div class="image-placeholder">[תמונה שלך עם גיטרה בשיקום]</div>
         </div>
     </div>
 
-    <!-- שקף 4: מעגלי התמיכה -->
+    <!-- שקף 4: מעגלי תמיכה -->
     <div class="slide">
         <div class="content-area">
             <h2 class="text-5xl font-bold mb-10 text-blue-400">הכוח שדוחף קדימה</h2>
@@ -223,11 +290,11 @@
             <div class="point"><span class="highlight">הכרת תודה על הרוח הגבית שאפשרה לי להתמקד בבנייה.</span></div>
         </div>
         <div class="image-area">
-            <div class="image-placeholder">[תמונה עם החברים מהיסודי או עם המשפחה]</div>
+            <div class="image-placeholder">[תמונה עם החברים או עם המשפחה]</div>
         </div>
     </div>
 
-    <!-- שקף 5: לוגיסטיקה באוטובוסים -->
+    <!-- שקף 5: לוגיסטיקה -->
     <div class="slide">
         <div class="content-area">
             <h2 class="text-5xl font-bold mb-10 text-blue-400">המלחמה על השגרה: אוטובוסים</h2>
@@ -237,11 +304,13 @@
             <div class="point">נחישות נמדדת ביכולת להגיע ליעד בכל מחיר.</div>
         </div>
         <div class="image-area">
-            <div class="image-placeholder">[תמונה של רב-קו או תמונה של אוטובוס/תחנה בתקופה ההיא]</div>
+            <div class="image-content">
+                <img src="bus_station_night_1776404537943.png" alt="Bus Station at Night">
+            </div>
         </div>
     </div>
 
-    <!-- שקף 6: נקודת השפל -->
+    <!-- שקף 6: נקודת שפל -->
     <div class="slide">
         <div class="content-area">
             <h2 class="text-5xl font-bold mb-10 text-blue-400">נקודת השפל המאוחרת</h2>
@@ -250,7 +319,7 @@
             <div class="point">המחשבה ש"לא רציתי לחיות": כשהבלאגן הפנימי הציף הכל.</div>
         </div>
         <div class="image-area">
-            <div class="image-placeholder">[תמונה סמלית של מסדרון ריק בקמפוס או תמונה אישית מהתקופה ההיא]</div>
+            <div class="image-placeholder">[תמונה סמלית של מסדרון ריק בקמפוס]</div>
         </div>
     </div>
 
@@ -263,7 +332,7 @@
             <div class="point">סיום התואר בהצלחה ותחילת הדרך כמפתח למידה.</div>
         </div>
         <div class="image-area">
-            <div class="image-placeholder">[תעודת התואר או תמונה מהלימודים בטכנולוגיות למידה]</div>
+            <div class="image-placeholder">[תעודת התואר או תמונה מהלימודים]</div>
         </div>
     </div>
 
@@ -302,11 +371,13 @@
             <div class="point">צמצום בלאגן ואופטימיזציה של זמן ואנרגיה.</div>
         </div>
         <div class="image-area">
-            <div class="image-placeholder">[גרפיקה של בינה מלאכותית או צילום מסך של כלי AI בשימוש]</div>
+            <div class="image-content">
+                <img src="ai_system_abstract_1776404558210.png" alt="AI Abstract System">
+            </div>
         </div>
     </div>
 
-    <!-- שקף 11: היום -->
+    <!-- שקף 11: עשייה עסקית -->
     <div class="slide">
         <div class="content-area">
             <h2 class="text-5xl font-bold mb-12 text-blue-400">היישום העסקי היום</h2>
@@ -338,25 +409,32 @@
             <h1 class="text-7xl font-bold mb-8 italic">"הכל יהיה בסדר"</h1>
             <p class="text-2xl text-slate-400 mb-10">תודה על ההקשבה.</p>
             <div class="p-8 bg-blue-600/20 rounded-xl border-2 border-blue-500 text-3xl font-bold inline-block">
-                🎸 זמן לנגן ולשיר
+                🎸 זמן לנגן והשיר
             </div>
         </div>
         <div class="image-area">
-            <div class="image-placeholder">[תמונה סופית מחייכת ומנצחת]</div>
+            <div class="image-content">
+                <img src="victory_silhouette_sunset_1776404574862.png" alt="Victory Silhouette">
+            </div>
         </div>
     </div>
 
     <div class="progress-bar" id="progress"></div>
     
-    <!-- כפתורי ניווט רגילים -->
     <div class="nav-buttons">
-        <button onclick="prevSlide()">הקודם</button>
-        <button onclick="nextSlide()">הבא</button>
+        <button class="nav-btn" onclick="nextSlide()" title="הבא">
+            <svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+        <div class="slide-counter" id="slideCounter">1 / 13</div>
+        <button class="nav-btn" onclick="prevSlide()" title="הקודם">
+            <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
     </div>
 
     <script>
         const slides = document.querySelectorAll('.slide');
         const progressBar = document.getElementById('progress');
+        const slideCounter = document.getElementById('slideCounter');
         let currentSlide = 0;
 
         function showSlide(index) {
@@ -367,6 +445,9 @@
             });
             const progress = ((index + 1) / slides.length) * 100;
             progressBar.style.width = `${progress}%`;
+            if (slideCounter) {
+                slideCounter.textContent = `${index + 1} / ${slides.length}`;
+            }
         }
 
         window.goToSlide = showSlide;
