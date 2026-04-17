@@ -13,8 +13,19 @@
         import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-        // הגדרות Firebase מהסביבה
-        const firebaseConfig = JSON.parse(__firebase_config);
+        // --- כאן יש להזין את הגדרות ה-Firebase שלך ---
+        // ניתן למצוא אותן ב-Firebase Console -> Project Settings
+        const firebaseConfig = {
+            apiKey: "AIzaSyAjsMGgDbat6Tz_LX0MKsk6-yQk83mwb4s",
+            authDomain: "presentation-36598.firebaseapp.com",
+            projectId: "presentation-36598",
+            storageBucket: "presentation-36598.firebasestorage.app",
+            messagingSenderId: "401943487076",
+            appId: "1:401943487076:web:68fcdeb4951bd505a07571",
+            measurementId: "G-WF17KMEE70"
+        };
+        // -------------------------------------------
+
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
