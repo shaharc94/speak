@@ -6,6 +6,7 @@
     <title>שלט מצגת - משיקום לאוטומציה</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:,">
     
     <!-- Firebase SDK -->
     <script type="module">
@@ -28,19 +29,27 @@
 
         let db;
         let currentSlide = 0;
-        const totalSlides = 13;
+        const totalSlides = 14;
         const appId = 'rehab-presentation'; // חייב להיות זהה למה שמוגדר במצגת
 
         async function initRemote() {
+            // תיקון אוטומטי לבעיית דומיין של פיירבייס
+            if (window.location.hostname === '127.0.0.1') {
+                console.log("Redirecting from 127.0.0.1 to localhost for Firebase Auth...");
+                window.location.hostname = 'localhost';
+                return;
+            }
+
             try {
+                console.log("Connecting to Firebase...");
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 const auth = getAuth(app);
                 
-                await signInAnonymously(auth);
-                console.log("Connected to Remote Control System");
+                // אימות לא חוסם
+                signInAnonymously(auth).then(() => console.log("Connected to Remote Control System")).catch(e => console.error("Auth Error:", e));
 
-                // האזנה למצב הנוכחי כדי לסנכרן את המספר בשלט
+                // התחלת האזנה
                 const remoteDoc = doc(db, 'artifacts', appId, 'public', 'data', 'remote_control', 'status');
                 onSnapshot(remoteDoc, (snapshot) => {
                     if (snapshot.exists()) {
@@ -55,7 +64,7 @@
                 document.getElementById('remote-ui').style.display = 'flex';
             } catch (error) {
                 console.error("Connection Error:", error);
-                alert("שגיאת חיבור ל-Firebase. וודא שהגדרת את ה-Config נכון.");
+                alert("שגיאת חיבור ל-Firebase.");
             }
         }
 
