@@ -103,20 +103,20 @@
         const appId = 'rehab-presentation';
 
         const reminders = [
-            "היום אני רוצה לקחת אתכם למסע שעברתי - מהמיטה בבית החולים ועד לעולם האוטומציה.",
-            "פברואר 2019 שינה את הכל. תאונת אופנוע, פגיעת ראש, שברים ולסת מקובעת. שם התחילה הבחירה.",
-            "מהרגע הראשון התייחסתי לשיקום כאל פרויקט - בלי הנחות, רק לאתגר את הגבולות.",
-            "אף אחד לא עובר מסע כזה לבד. המשפחה, אלינה והחברים הם הרוח הגבית שלי.",
-            "הנחישות נמדדת בשעות באוטובוסים - בין חולון לתל השומר, העיקר לא להפסיק לנסוע.",
-            "גם כשהייתי כבר 'סטודנט', הבאלגן הפנימי הציף הכל. זה בסדר להרגיש שקשה, העיקר להבין מתי לשנות כיוון.",
-            "מכישלון במבחנים לצמיחה בתואר בטכנולוגיות למידה. לפעמים לשנות מסלול זו ההחלטה הכי אסטרטגית.",
-            "במכירות למדתי ששיקום הוא גם תקשורת. לצאת מאזור הנוחות וללמוד להקשיב באמת.",
-            "הבית הוא המקום שבו אני נטען - אלינה ולוסי הן הסיבות לקום ולחייך בכל בוקר.",
-            "בקהילת אור מצאתי שאני כבר לא רק 'נתמך' - אני יכול לתרום מהניסיון שלי לאחרים.",
-            "ה-AI הוא לא רק כלי טכני, הוא השותף שלי לניהול עומסים ולייעול החיים.",
-            "היום אני מחבר בין העסק המשפחתי לטכנולוגיה - להביא את העתיד לשטח.",
-            "כשחזרתי לנגן ולשיר, הבנתי שהשיקום הושלם. זו גרסה 2.0 שלי.",
-            "תודות: תודה לכם. הכל יהיה בסדר - כל עוד אנחנו בוחרים להמשיך לבנות."
+            "פתיחה: מסע מהמיטה בבית החולים לעולם האוטומציה.",
+            "תאונת אופנוע 2019: פגיעת ראש, לסת מרוסקת, טחול שהתפוצץ. שם התחילה הבחירה.",
+            "ניהול השיקום כפרויקט (בדיעבד). בזמן אמת: רק לאתגר את הגבולות.",
+            "מעגלי תמיכה: הכרת תודה למשפחה, לאלינה ולחברים על הרוח הגבית.",
+            "לוגיסטיקה: מהבית ברמת גן - תל השומר - מכון רקנאטי - חולון (HIT). נחישות בכל מחיר.",
+            "נקודת שפל: קושי חברתי ולימודי. כשהבלאגן הפנימי משתלט.",
+            "שינוי מסלול: מעבר לתואר בטכנולוגיות למידה. להבין מתי לשנות כיוון.",
+            "מכירות: לצאת מאזור הנוחות. ללמוד להקשיב ולבנות ביטחון עצמי.",
+            "הבית: אלינה ולוסי. העוגן והאנרגיה לקום בכל בוקר.",
+            "קהילת אור: לתמוך, להיתמך ולשתף חוויות דומות.",
+            "AI: אימוץ הטכנולוגיה כשותף לביצועים ולניהול עומסים.",
+            "יישום עסקי: חיבור הטכנולוגיה לשטח בעסקים המשפחתיים.",
+            "סגירת מעגל: חזרה לנגינה ושירה. גרסה 2.0 של עצמי.",
+            "סיכום: הכל יהיה בסדר. תודה על ההקשבה."
         ];
 
         async function initRemote() {
@@ -221,22 +221,21 @@
         </div>
 
         <!-- Controls Area -->
-        <div class="h-[45%] flex w-full">
-            <!-- Prev Button -->
-            <button onclick="updateSlide('prev')" class="nav-btn prev">
-                <div class="flex flex-col items-center opacity-40">
-                    <svg class="w-10 h-10 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                    <span class="text-sm font-bold uppercase tracking-widest">הקודם</span>
-                </div>
-            </button>
-
+        <div class="h-[42%] flex w-full border-t border-white/5 bg-slate-900/50">
             <!-- Next Button (Main) -->
-            <button onclick="updateSlide('next')" class="nav-btn next flex-grow">
+            <button onclick="updateSlide('next')" class="nav-btn next flex-grow bg-blue-600/5 p-8">
                 <div class="flex flex-col items-center">
                     <div class="w-20 h-20 glass rounded-full flex items-center justify-center mb-4 pulse-border border-blue-500/30">
-                        <svg class="w-12 h-12 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 15l7-7 7 7"></path></svg>
+                        <svg class="w-12 h-12 text-blue-400 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"></path></svg>
                     </div>
-                    <span class="text-2xl font-bold text-blue-400 uppercase tracking-widest">השקף הבא</span>
+                    <span class="text-xl font-bold text-blue-400 tracking-widest uppercase">השקף הבא</span>
+                </div>
+            </button>
+            <!-- Prev Button -->
+            <button onclick="updateSlide('prev')" class="nav-btn prev w-1/3 border-r border-white/5 p-6">
+                <div class="flex flex-col items-center opacity-40">
+                    <svg class="w-7 h-7 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
+                    <span class="text-[10px] font-bold uppercase tracking-[0.2em]">הקודם</span>
                 </div>
             </button>
         </div>
