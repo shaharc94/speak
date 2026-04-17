@@ -6,6 +6,7 @@
     <title>משיקום לאוטומציה - המצגת המלאה</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:,">
     
     <!-- Firebase SDK -->
     <script type="module">
@@ -34,28 +35,50 @@
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'rehab-presentation';
 
         async function initRemoteControl() {
+            // תיקון אוטומטי לבעיית דומיין של פיירבייס
+            if (window.location.hostname === '127.0.0.1') {
+                console.log("Redirecting from 127.0.0.1 to localhost for Firebase Auth...");
+                window.location.hostname = 'localhost';
+                return;
+            }
+
             try {
-                // שלב 1: אימות (Auth) לפני שאילתות
+                console.log("Step 1: Starting Firebase Auth (Non-blocking)...");
+                // שלב 1: אימות (Auth) - הפכנו ללא-חוסם כדי שהמצגת תעלה גם אם יש עיכוב בפיירבייס
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
+                    signInWithCustomToken(auth, __initial_auth_token).catch(e => console.error("Custom Token Error:", e));
                 } else {
-                    await signInAnonymously(auth);
+                    signInAnonymously(auth).then(() => console.log("Auth Successful (Anonymous)")).catch(e => console.error("Anonymous Auth Error:", e));
                 }
 
+                console.log("Step 2: Setting up Auth State Observer...");
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
+                        console.log("Step 3: Auth State ACTIVE, listening to Firestore...");
                         // שלב 2: האזנה למסמך (נתיב של 6 מקטעים לפי הכללים)
                         const remoteDoc = doc(db, 'artifacts', appId, 'public', 'data', 'remote_control', 'status');
+                        console.log("Step 4: Monitoring document path:", remoteDoc.path);
+                        
                         onSnapshot(remoteDoc, (snapshot) => {
                             if (snapshot.exists()) {
                                 const data = snapshot.data();
+                                console.log("Step 5: New Data received from Firestore:", data);
                                 if (data && typeof data.slideIndex === 'number') {
-                                    window.goToSlide(data.slideIndex);
+                                    if (window.goToSlide) {
+                                        console.log("Step 6: Executing goToSlide(" + data.slideIndex + ")");
+                                        window.goToSlide(data.slideIndex);
+                                    } else {
+                                        console.warn("Step 6: window.goToSlide not yet defined!");
+                                    }
                                 }
+                            } else {
+                                console.log("Step 5: Document does not exist yet.");
                             }
                         }, (error) => {
                             console.error("Firebase Snapshot Error:", error);
                         });
+                    } else {
+                        console.log("Step 3: Auth State INACTIVE (Signed out or pending)");
                     }
                 });
             } catch (error) {
@@ -63,7 +86,10 @@
             }
         }
 
-        window.addEventListener('load', initRemoteControl);
+        window.addEventListener('load', () => {
+            console.log("Page loaded, starting Remote Control...");
+            initRemoteControl();
+        });
     </script>
 
     <style>
@@ -259,7 +285,7 @@
     <div class="slide">
         <div class="content-area">
             <h2 class="text-5xl font-bold mb-10 text-blue-400">ההתרסקות: דוח נזק</h2>
-            <div class="point">תאונת אופנוע קשה ושלושה חודשי אשפוז בשיקום מלא.</div>
+            <div class="point">פברואר 2019: תאונת אופנוע קשה ושלושה חודשי אשפוז בשיקום מלא.</div>
             <div class="point">
                 <span class="medical-tag">פגיעת ראש</span> דימום מוחי.
             </div>
@@ -296,6 +322,7 @@
         <div class="content-area">
             <h2 class="text-5xl font-bold mb-10 text-blue-400">הכוח שדוחף קדימה</h2>
             <div class="point">המשפחה ואמא: היו שם מהשנייה הראשונה, חיפשו פתרונות ודחפו אותי.</div>
+            <div class="point">אלינה: העוגן והשותפה לדרך שהצטרפה בהמשך והפכה לכוח המרכזי שדוחף קדימה.</div>
             <div class="point">החברים מהיסודי: החבורה שנשארה איתי מההתחלה ודאגה שלא אוותר.</div>
             <div class="point">תמיכה עקבית: האנשים שהאמינו בי גם ברגעים הקשים.</div>
             <div class="point"><span class="highlight">הכרת תודה על הרוח הגבית שאפשרה לי להתמקד בבנייה.</span></div>
@@ -324,7 +351,7 @@
     <!-- שקף 6: נקודת שפל -->
     <div class="slide">
         <div class="content-area">
-            <h2 class="text-5xl font-bold mb-10 text-blue-400">נקודת השפל המאוחרת</h2>
+            <h2 class="text-5xl font-bold mb-10 text-blue-400">נקודת השפל</h2>
             <div class="point">המשבר הגיע תוכדי הניסיון לחזור לחיים הסטודנטיאליים.</div>
             <div class="point">הלימודים בחולון: קושי חברתי ותחושת חוסר שייכות.</div>
             <div class="point">המחשבה ש"לא רציתי לחיות": כשהבלאגן הפנימי הציף הכל.</div>
@@ -338,7 +365,7 @@
     <div class="slide">
         <div class="content-area">
             <h2 class="text-5xl font-bold mb-12 text-blue-400">ניהול משאבים: שינוי מסלול אסטרטגי</h2>
-            <div class="point">המבחנים שלא הצלחתי לעבור <span class="highlight">וההבנה</span> שצריך לשנות כיוון.</div>
+            <div class="point">המבחנים שלא הצלחתי לעבור <span class="highlight">- וההבנה שצריך לשנות כיוון</span>.</div>
             <div class="point">לא מוותרים על השכלה: מעבר לתואר בטכנולוגיות למידה.</div>
             <div class="point">סיום התואר בהצלחה ותחילת הדרך כמפתח למידה.</div>
         </div>
@@ -373,7 +400,22 @@
         </div>
     </div>
 
-    <!-- שקף 10: AI -->
+    <!-- שקף 10: קהילת אור -->
+    <div class="slide">
+        <div class="content-area">
+            <h2 class="text-5xl font-bold mb-12 text-blue-400">קהילת אור: הכוח שבשיתוף</h2>
+            <div class="point">עמותה לנפגעי פגיעות מוחיות - מקום שמרגיש כמו בית ומשפחה.</div>
+            <div class="point">שיתוף חוויות מהשיקום: למידה הדדית מהדרך ומהניסיון של כל אחד.</div>
+            <div class="point">התנדבות וחיבור: המקום שבו אני מוצא משמעות בלתת חזרה ולחזק אחרים.</div>
+        </div>
+        <div class="image-area">
+            <div class="image-content">
+                <img src="or_community_light_hope_1776406737084.png" alt="קהילת אור - הכוח בשיתוף">
+            </div>
+        </div>
+    </div>
+
+    <!-- שקף 11: AI -->
     <div class="slide">
         <div class="content-area">
             <h2 class="text-5xl font-bold mb-12 text-blue-400">שימוש אינטנסיבי ב-AI</h2>
@@ -388,7 +430,7 @@
         </div>
     </div>
 
-    <!-- שקף 11: עשייה עסקית -->
+    <!-- שקף 12: עשייה עסקית -->
     <div class="slide">
         <div class="content-area">
             <h2 class="text-5xl font-bold mb-12 text-blue-400">היישום העסקי היום</h2>
@@ -401,7 +443,7 @@
         </div>
     </div>
 
-    <!-- שקף 12: מוזיקה -->
+    <!-- שקף 13: מוזיקה -->
     <div class="slide">
         <div class="content-area">
             <h2 class="text-5xl font-bold mb-12 text-blue-400">סגירת מעגל: מוזיקה וקול</h2>
@@ -414,7 +456,7 @@
         </div>
     </div>
 
-    <!-- שקף 13: סיום -->
+    <!-- שקף 14: סיום -->
     <div class="slide">
         <div class="content-area">
             <h1 class="text-7xl font-bold mb-8 italic">"הכל יהיה בסדר"</h1>
@@ -436,7 +478,7 @@
         <button class="nav-btn" onclick="nextSlide()" title="הבא">
             <svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
         </button>
-        <div class="slide-counter" id="slideCounter">1 / 13</div>
+        <div class="slide-counter" id="slideCounter">1 / 14</div>
         <button class="nav-btn" onclick="prevSlide()" title="הקודם">
             <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
         </button>
