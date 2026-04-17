@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>שלט מצגת - משיקום לאוטומציה</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;700&display=swap" rel="stylesheet">
+    
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+        // --- כאן יש להזין את הגדרות ה-Firebase שלך ---
+        // ניתן למצוא אותן ב-Firebase Console -> Project Settings
+        const firebaseConfig = {
+            apiKey: "AIzaSyAjsMgGdbat6Tz_LX0MKsk6-yQk83mwb4s",
+            authDomain: "presentation-36598.firebaseapp.com",
+            projectId: "presentation-36598",
+            storageBucket: "presentation-36598.firebasestorage.app",
+            messagingSenderId: "401943487076",
+            appId: "1:401943487076:web:68fcdeb4951bd505a07571",
+            measurementId: "G-WF17KMEE70"
+        };
+        // -------------------------------------------
+
+        let db;
+        let currentSlide = 0;
+        const totalSlides = 13;
+        const appId = 'rehab-presentation'; // חייב להיות זהה למה שמוגדר במצגת
+
+        async function initRemote() {
+            try {
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                const auth = getAuth(app);
+                
+                await signInAnonymously(auth);
+                console.log("Connected to Remote Control System");
+
+                // האזנה למצב הנוכחי כדי לסנכרן את המספר בשלט
+                const remoteDoc = doc(db, 'artifacts', appId, 'public', 'data', 'remote_control', 'status');
+                onSnapshot(remoteDoc, (snapshot) => {
+                    if (snapshot.exists()) {
+                        const data = snapshot.data();
+                        if (data && typeof data.slideIndex === 'number') {
+                            updateUI(data.slideIndex);
+                        }
+                    }
+                });
+
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('remote-ui').style.display = 'flex';
+            } catch (error) {
+                console.error("Connection Error:", error);
+                alert("שגיאת חיבור ל-Firebase. וודא שהגדרת את ה-Config נכון.");
+            }
+        }
+
+        function updateUI(index) {
+            currentSlide = index;
+            document.getElementById('slide-number').textContent = index + 1;
+            
+            // רטט קצר בסינכרון (אם נתמך)
+            if (navigator.vibrate) navigator.vibrate(20);
+        }
+
+        window.updateSlide = async function(direction) {
+            let nextIndex = currentSlide;
+            if (direction === 'next' && currentSlide < totalSlides - 1) nextIndex++;
+            if (direction === 'prev' && currentSlide > 0) nextIndex--;
+            
+            if (nextIndex !== currentSlide) {
+                try {
+                    const remoteDoc = doc(db, 'artifacts', appId, 'public', 'data', 'remote_control', 'status');
+                    await setDoc(remoteDoc, { 
+                        slideIndex: nextIndex,
+                        timestamp: Date.now()
+                    }, { merge: true });
+                } catch (e) {
+                    console.error("Update Error:", e);
+                }
+            }
+        };
+
+        window.addEventListener('load', initRemote);
+    </script>
+
+    <style>
+        body {
+            font-family: 'Assistant', sans-serif;
+            background: #0f172a;
+            color: #f8fafc;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+        .control-btn {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            -webkit-tap-highlight-color: transparent;
+            border: none;
+            outline: none;
+            width: 100%;
+        }
+        .btn-next {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border-bottom: 2px solid rgba(59, 130, 246, 0.3);
+        }
+        .btn-prev {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            height: 30vh;
+            flex: 0 0 30vh;
+        }
+        .control-btn:active {
+            filter: brightness(1.5);
+            background: rgba(59, 130, 246, 0.1);
+        }
+        .slide-info {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(15, 23, 42, 0.9);
+            border: 2px solid #3b82f6;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0 40px rgba(59, 130, 246, 0.4);
+            pointer-events: none;
+            z-index: 10;
+        }
+        .pulse {
+            animation: pulse-blue 2s infinite;
+        }
+        @keyframes pulse-blue {
+            0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
+            70% { box-shadow: 0 0 0 20px rgba(59, 130, 246, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
+        .icon {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+            color: #3b82f6;
+        }
+        #loading {
+            position: fixed;
+            inset: 0;
+            background: #0f172a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loading">
+        <div class="text-center">
+            <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p class="text-blue-400 font-bold">מתחבר למצגת...</p>
+        </div>
+    </div>
+
+    <div id="remote-ui" style="display: none;" class="flex-col h-full w-full">
+        <!-- כפתור הבא - אזור ענק עליון -->
+        <button class="control-btn btn-next" onclick="updateSlide('next')">
+            <div class="icon">
+                <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+            </div>
+            <span class="text-2xl font-bold text-blue-400">הבא</span>
+        </button>
+
+        <!-- מידע על השקף נוכחי -->
+        <div class="slide-info pulse">
+            <span class="text-xs uppercase tracking-widest text-slate-400 mb-1">שקף</span>
+            <span id="slide-number" class="text-4xl font-bold">1</span>
+        </div>
+
+        <!-- כפתור הקודם - אזור תחתון -->
+        <button class="control-btn btn-prev" onclick="updateSlide('prev')">
+            <span class="text-xl font-bold text-slate-500 mb-2">הקודם</span>
+            <div class="icon opacity-50">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </div>
+        </button>
+    </div>
+
+</body>
+</html>
