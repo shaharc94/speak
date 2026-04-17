@@ -3,19 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>שלט מצגת - משיקום לאוטומציה</title>
+    <title>שלט חכם - משיקום לאוטומציה</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;700&display=swap" rel="stylesheet">
     <link rel="icon" href="data:,">
     
+    <style>
+        body {
+            font-family: 'Assistant', sans-serif;
+            background: #0f172a;
+            color: #f1f5f9;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+
+        .glass {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .note-card {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border-radius: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-btn:active {
+            filter: brightness(1.5);
+            background: rgba(59, 130, 246, 0.1);
+            transform: scale(0.98);
+        }
+
+        .nav-btn.next {
+            background: rgba(59, 130, 246, 0.05);
+            border-left: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .nav-btn.prev {
+            background: rgba(30, 41, 59, 0.3);
+            width: 30%;
+        }
+
+        .pulse-border {
+            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
+
+        .progress-bar {
+            height: 4px;
+            background: #3b82f6;
+            transition: width 0.3s ease;
+        }
+    </style>
+
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-        // --- כאן יש להזין את הגדרות ה-Firebase שלך ---
-        // ניתן למצוא אותן ב-Firebase Console -> Project Settings
         const firebaseConfig = {
             apiKey: "AIzaSyAjsMGgDbat6Tz_LX0MKsk6-yQk83mwb4s",
             authDomain: "presentation-36598.firebaseapp.com",
@@ -25,31 +95,42 @@
             appId: "1:401943487076:web:68fcdeb4951bd505a07571",
             measurementId: "G-WF17KMEE70"
         };
-        // -------------------------------------------
 
         let db;
         let currentSlide = 0;
         const totalSlides = 14;
-        const appId = 'rehab-presentation'; // חייב להיות זהה למה שמוגדר במצגת
+        const appId = 'rehab-presentation';
+
+        const reminders = [
+            "היום אני רוצה לקחת אתכם למסע שעברתי - מהמיטה בבית החולים ועד לעולם האוטומציה.",
+            "פברואר 2019 שינה את הכל. תאונת אופנוע, פגיעת ראש, שברים ולסת מקובעת. שם התחילה הבחירה.",
+            "מהרגע הראשון התייחסתי לשיקום כאל פרויקט - בלי הנחות, רק לאתגר את הגבולות.",
+            "אף אחד לא עובר מסע כזה לבד. המשפחה, אלינה והחברים הם הרוח הגבית שלי.",
+            "הנחישות נמדדת בשעות באוטובוסים - בין חולון לתל השומר, העיקר לא להפסיק לנסוע.",
+            "גם כשהייתי כבר 'סטודנט', הבאלגן הפנימי הציף הכל. זה בסדר להרגיש שקשה, העיקר להבין מתי לשנות כיוון.",
+            "מכישלון במבחנים לצמיחה בתואר בטכנולוגיות למידה. לפעמים לשנות מסלול זו ההחלטה הכי אסטרטגית.",
+            "במכירות למדתי ששיקום הוא גם תקשורת. לצאת מאזור הנוחות וללמוד להקשיב באמת.",
+            "הבית הוא המקום שבו אני נטען - אלינה ולוסי הן הסיבות לקום ולחייך בכל בוקר.",
+            "בקהילת אור מצאתי שאני כבר לא רק 'נתמך' - אני יכול לתרום מהניסיון שלי לאחרים.",
+            "ה-AI הוא לא רק כלי טכני, הוא השותף שלי לניהול עומסים ולייעול החיים.",
+            "היום אני מחבר בין העסק המשפחתי לטכנולוגיה - להביא את העתיד לשטח.",
+            "כשחזרתי לנגן ולשיר, הבנתי שהשיקום הושלם. זו גרסה 2.0 שלי.",
+            "תודות: תודה לכם. הכל יהיה בסדר - כל עוד אנחנו בוחרים להמשיך לבנות."
+        ];
 
         async function initRemote() {
-            // תיקון אוטומטי לבעיית דומיין של פיירבייס
             if (window.location.hostname === '127.0.0.1') {
-                console.log("Redirecting from 127.0.0.1 to localhost for Firebase Auth...");
                 window.location.hostname = 'localhost';
                 return;
             }
 
             try {
-                console.log("Connecting to Firebase...");
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 const auth = getAuth(app);
                 
-                // אימות לא חוסם
-                signInAnonymously(auth).then(() => console.log("Connected to Remote Control System")).catch(e => console.error("Auth Error:", e));
+                signInAnonymously(auth).then(() => console.log("Connected")).catch(e => console.error(e));
 
-                // התחלת האזנה
                 const remoteDoc = doc(db, 'artifacts', appId, 'public', 'data', 'remote_control', 'status');
                 onSnapshot(remoteDoc, (snapshot) => {
                     if (snapshot.exists()) {
@@ -60,20 +141,20 @@
                     }
                 });
 
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('remote-ui').style.display = 'flex';
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('remote-ui').classList.remove('hidden');
             } catch (error) {
-                console.error("Connection Error:", error);
-                alert("שגיאת חיבור ל-Firebase.");
+                console.error(error);
             }
         }
 
         function updateUI(index) {
             currentSlide = index;
-            document.getElementById('slide-number').textContent = index + 1;
+            document.getElementById('slide-number').textContent = `${index + 1} / ${totalSlides}`;
+            document.getElementById('reminder-text').textContent = reminders[index] || "אין תזכורת לשקף זה.";
+            document.getElementById('progress').style.width = `${((index + 1) / totalSlides) * 100}%`;
             
-            // רטט קצר בסינכרון (אם נתמך)
-            if (navigator.vibrate) navigator.vibrate(20);
+            if (navigator.vibrate) navigator.vibrate(25);
         }
 
         window.updateSlide = async function(direction) {
@@ -89,125 +170,75 @@
                         timestamp: Date.now()
                     }, { merge: true });
                 } catch (e) {
-                    console.error("Update Error:", e);
+                    console.error(e);
                 }
             }
         };
 
         window.addEventListener('load', initRemote);
     </script>
-
-    <style>
-        body {
-            font-family: 'Assistant', sans-serif;
-            background: #0f172a;
-            color: #f8fafc;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
-            touch-action: manipulation;
-        }
-        .control-btn {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            -webkit-tap-highlight-color: transparent;
-            border: none;
-            outline: none;
-            width: 100%;
-        }
-        .btn-next {
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-            border-bottom: 2px solid rgba(59, 130, 246, 0.3);
-        }
-        .btn-prev {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            height: 30vh;
-            flex: 0 0 30vh;
-        }
-        .control-btn:active {
-            filter: brightness(1.5);
-            background: rgba(59, 130, 246, 0.1);
-        }
-        .slide-info {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(15, 23, 42, 0.9);
-            border: 2px solid #3b82f6;
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 0 40px rgba(59, 130, 246, 0.4);
-            pointer-events: none;
-            z-index: 10;
-        }
-        .pulse {
-            animation: pulse-blue 2s infinite;
-        }
-        @keyframes pulse-blue {
-            0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
-            70% { box-shadow: 0 0 0 20px rgba(59, 130, 246, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
-        }
-        .icon {
-            font-size: 3rem;
-            margin-bottom: 0.5rem;
-            color: #3b82f6;
-        }
-        #loading {
-            position: fixed;
-            inset: 0;
-            background: #0f172a;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-        }
-    </style>
 </head>
-<body>
+<body class="antialiased select-none">
 
-    <div id="loading">
+    <!-- Loading Screen -->
+    <div id="loading" class="fixed inset-0 z-50 flex items-center justify-center bg-[#0f172a]">
         <div class="text-center">
-            <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p class="text-blue-400 font-bold">מתחבר למצגת...</p>
+            <div class="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+            <p class="text-blue-400 font-bold text-xl">מתחבר למערכת השלט...</p>
         </div>
     </div>
 
-    <div id="remote-ui" style="display: none;" class="flex-col h-full w-full">
-        <!-- כפתור הבא - אזור ענק עליון -->
-        <button class="control-btn btn-next" onclick="updateSlide('next')">
-            <div class="icon">
-                <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+    <!-- Main Remote UI -->
+    <div id="remote-ui" class="hidden flex flex-col h-full w-full">
+        
+        <!-- Header Info -->
+        <div class="p-6 glass flex justify-between items-center z-10">
+            <div class="flex items-center gap-3">
+                <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_#22c55e]"></div>
+                <span class="text-sm font-bold text-slate-400 tracking-wider">מחובר למצגת</span>
             </div>
-            <span class="text-2xl font-bold text-blue-400">הבא</span>
-        </button>
-
-        <!-- מידע על השקף נוכחי -->
-        <div class="slide-info pulse">
-            <span class="text-xs uppercase tracking-widest text-slate-400 mb-1">שקף</span>
-            <span id="slide-number" class="text-4xl font-bold">1</span>
+            <div id="slide-number" class="text-xl font-bold font-mono text-blue-400">1 / 14</div>
         </div>
 
-        <!-- כפתור הקודם - אזור תחתון -->
-        <button class="control-btn btn-prev" onclick="updateSlide('prev')">
-            <span class="text-xl font-bold text-slate-500 mb-2">הקודם</span>
-            <div class="icon opacity-50">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        <div class="fixed top-[72px] left-0 w-full z-10">
+            <div id="progress" class="progress-bar" style="width: 7%;"></div>
+        </div>
+
+        <!-- Speaker Notes & Reminder Area -->
+        <div class="flex-grow p-6 flex flex-col items-center justify-center mt-4">
+            <div class="note-card w-full p-8 min-h-[180px] flex items-center justify-center text-center relative">
+                <div class="absolute -top-3 right-8 bg-blue-600 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">תזכורת למרצה</div>
+                <p id="reminder-text" class="text-2xl font-light leading-snug text-slate-100">
+                    טוען תזכורות...
+                </p>
             </div>
-        </button>
+        </div>
+
+        <!-- Controls Area -->
+        <div class="h-[45%] flex w-full">
+            <!-- Prev Button -->
+            <button onclick="updateSlide('prev')" class="nav-btn prev">
+                <div class="flex flex-col items-center opacity-40">
+                    <svg class="w-10 h-10 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    <span class="text-sm font-bold uppercase tracking-widest">הקודם</span>
+                </div>
+            </button>
+
+            <!-- Next Button (Main) -->
+            <button onclick="updateSlide('next')" class="nav-btn next flex-grow">
+                <div class="flex flex-col items-center">
+                    <div class="w-20 h-20 glass rounded-full flex items-center justify-center mb-4 pulse-border border-blue-500/30">
+                        <svg class="w-12 h-12 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 15l7-7 7 7"></path></svg>
+                    </div>
+                    <span class="text-2xl font-bold text-blue-400 uppercase tracking-widest">השקף הבא</span>
+                </div>
+            </button>
+        </div>
+
+        <!-- Help/Footer -->
+        <div class="p-4 glass text-center text-[10px] text-slate-500 uppercase tracking-[0.2em]">
+            משיקום לאוטומציה &copy; 2026 | שלט חכם מבוסס ענן
+        </div>
     </div>
 
 </body>
