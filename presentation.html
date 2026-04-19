@@ -62,6 +62,7 @@
                         
                         let lastSlideIndex = -1;
                         let lastMediaCommandTimestamp = 0;
+                        let lastVideoActionTimestamp = 0;
 
                         // מניעת כפילויות של מאזינים
                         if (window.unsubscribeStatus) window.unsubscribeStatus();
@@ -69,7 +70,7 @@
                         window.unsubscribeStatus = onSnapshot(remoteDoc, (snapshot) => {
                             if (snapshot.exists()) {
                                 const data = snapshot.data();
-                                // console.log("Step 5: New Data received from Firestore:", data);
+                                console.log("Step 5: New Data received from Firestore:", data);
                                 
                                 // בדיקת שינוי שקף
                                 if (data && typeof data.slideIndex === 'number' && data.slideIndex !== lastSlideIndex) {
@@ -80,18 +81,32 @@
                                     }
                                 }
 
-                                // בדיקת פקודת מדיה (תמונה הבאה/הקודמת/נגן)
-                                const cmd = data.mediaCommand;
-                                if (cmd && cmd.timestamp > lastMediaCommandTimestamp) {
-                                    lastMediaCommandTimestamp = cmd.timestamp;
-                                    console.log("Step 7: Media Command received:", cmd.type, "at", cmd.timestamp);
+                                // בדיקת פקודת מדיה (תמונה הבאה/הקודמת)
+                                if (data && data.mediaCommand && data.mediaCommand.timestamp > lastMediaCommandTimestamp) {
+                                    lastMediaCommandTimestamp = data.mediaCommand.timestamp;
+                                    console.log("Step 7: Media Command received:", data.mediaCommand.type);
                                     
-                                    if (cmd.type === 'next' && window.nextMedia) {
+                                    if (data.mediaCommand.type === 'next' && window.nextMedia) {
                                         window.nextMedia();
-                                    } else if (cmd.type === 'prev' && window.prevMedia) {
+                                    } else if (data.mediaCommand.type === 'prev' && window.prevMedia) {
                                         window.prevMedia();
-                                    } else if (cmd.type === 'playPause' && window.togglePlayPause) {
-                                        window.togglePlayPause();
+                                    }
+                                }
+
+                                // בדיקת פקודת וידאו (ניגון/השהיה)
+                                if (data && data.videoAction && data.videoAction.timestamp > lastVideoActionTimestamp) {
+                                    lastVideoActionTimestamp = data.videoAction.timestamp;
+                                    console.log("Step 8: Video Action received:", data.videoAction.type);
+                                    
+                                    if (data.videoAction.type === 'toggle') {
+                                        const activeVideo = document.querySelector('.slide.active video.active') || document.querySelector('.slide.active video');
+                                        if (activeVideo) {
+                                            if (activeVideo.paused) {
+                                                activeVideo.play().catch(console.error);
+                                            } else {
+                                                activeVideo.pause();
+                                            }
+                                        }
                                     }
                                 }
                             } else {
