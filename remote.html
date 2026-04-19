@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>משיקום לאוטומציה - המצגת המלאה</title>
+    <!-- שימוש ב-CSS בלבד כדי להימנע מהתראות CDN בקונסול -->
+    <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:,">
+    
+    <style>
+        body {
+            font-family: 'Assistant', sans-serif;
+            background: #0f172a;
+            color: #f1f5f9;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+
+        .glass {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .note-card {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border-radius: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-btn:active {
+            filter: brightness(1.5);
+            background: rgba(59, 130, 246, 0.1);
+            transform: scale(0.98);
+        }
+
+        .nav-btn.next {
+            background: rgba(59, 130, 246, 0.05);
+            border-left: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .nav-btn.prev {
+            background: rgba(30, 41, 59, 0.3);
+            width: 30%;
+        }
+
+        .pulse-border {
+            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
+
+        .progress-bar {
+            height: 4px;
+            background: #3b82f6;
+            transition: width 0.3s ease;
+        }
+    </style>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAjsMGgDbat6Tz_LX0MKsk6-yQk83mwb4s",
+            authDomain: "presentation-36598.firebaseapp.com",
+            projectId: "presentation-36598",
+            storageBucket: "presentation-36598.firebasestorage.app",
+            messagingSenderId: "401943487076",
+            appId: "1:401943487076:web:68fcdeb4951bd505a07571",
+            measurementId: "G-WF17KMEE70"
+        };
+
+        let db;
+        let currentSlide = 0;
+        const totalSlides = 14;
+        const appId = 'rehab-presentation';
+
+        const reminders = [
+            "פתיחה: מסע מהמיטה בבית החולים לעולם האוטומציה.",
+            "תאונת אופנוע 2019: פגיעת ראש, לסת מרוסקת, טחול שהתפוצץ. שם התחילה הבחירה.",
+            "ניהול השיקום כפרויקט (בדיעבד). בזמן אמת: רק לאתגר את הגבולות.",
+            "מעגלי תמיכה: הכרת תודה למשפחה, לאלינה ולחברים על הרוח הגבית.",
+            "לוגיסטיקה: מהבית ברמת גן - תל השומר - מכון רקנאטי - חולון (HIT). נחישות בכל מחיר.",
+            "נקודת שפל: קושי חברתי ולימודי. כשהבלאגן הפנימי משתלט.",
+            "שינוי מסלול: מעבר לתואר בטכנולוגיות למידה. להבין מתי לשנות כיוון.",
+            "מכירות: לצאת מאזור הנוחות. ללמוד להקשיב ולבנות ביטחון עצמי.",
+            "הבית: אלינה ולוסי. העוגן והאנרגיה לקום בכל בוקר.",
+            "קהילת אור: לתמוך, להיתמך ולשתף חוויות דומות.",
+            "AI: אימוץ הטכנולוגיה כשותף לביצועים ולניהול עומסים.",
+            "יישום עסקי: חיבור הטכנולוגיה לשטח בעסקים המשפחתיים.",
+            "סגירת מעגל: חזרה לנגינה ושירה. גרסה 2.0 של עצמי.",
+            "סיכום: הכל יהיה בסדר. תודה על ההקשבה."
+        ];
+
+        async function initRemote() {
+            if (window.location.hostname === '127.0.0.1') {
+                window.location.hostname = 'localhost';
+                return;
+            }
+
+            try {
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                const auth = getAuth(app);
+                
+                signInAnonymously(auth).then(() => console.log("Connected")).catch(e => console.error(e));
+
+                const remoteDoc = doc(db, 'artifacts', appId, 'public', 'data', 'remote_control', 'status');
+                onSnapshot(remoteDoc, (snapshot) => {
+                    if (snapshot.exists()) {
+                        const data = snapshot.data();
+                        if (data && typeof data.slideIndex === 'number') {
+                            updateUI(data.slideIndex);
+                        }
+                    }
+                });
+
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('remote-ui').classList.remove('hidden');
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        let isLoaded = false;
+        function updateUI(index) {
+            currentSlide = index;
+            document.getElementById('slide-number').textContent = `${index + 1} / ${totalSlides}`;
+            document.getElementById('reminder-text').textContent = reminders[index] || "אין תזכורת לשקף זה.";
+            document.getElementById('progress').style.width = `${((index + 1) / totalSlides) * 100}%`;
+            
+            // רטט רק אם המשתמש כבר ביצע פעולה והדף טעון במלואו
+            if (isLoaded && navigator.vibrate) {
+                try { navigator.vibrate(25); } catch(e) {}
+            }
+            isLoaded = true;
+        }
+
+        window.updateSlide = async function(direction) {
+            let nextIndex = currentSlide;
+            if (direction === 'next' && currentSlide < totalSlides - 1) nextIndex++;
+            if (direction === 'prev' && currentSlide > 0) nextIndex--;
+            
+            if (nextIndex !== currentSlide) {
+                try {
+                    const remoteDoc = doc(db, 'artifacts', appId, 'public', 'data', 'remote_control', 'status');
+                    await setDoc(remoteDoc, { 
+                        slideIndex: nextIndex,
+                        timestamp: Date.now()
+                    }, { merge: true });
+                } catch (e) {
+                    console.error(e);
+                }
+            }
+        };
+
+        window.addEventListener('load', initRemote);
+    </script>
+</head>
+<body class="antialiased select-none">
+
+    <!-- Loading Screen -->
+    <div id="loading" class="fixed inset-0 z-50 flex items-center justify-center bg-[#0f172a]">
+        <div class="text-center">
+            <div class="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+            <p class="text-blue-400 font-bold text-xl">מתחבר למערכת השלט...</p>
+        </div>
+    </div>
+
+    <!-- Main Remote UI -->
+    <div id="remote-ui" class="hidden flex flex-col h-full w-full">
+        
+        <!-- Header Info -->
+        <div class="p-6 glass flex justify-between items-center z-10">
+            <div class="flex items-center gap-3">
+                <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_#22c55e]"></div>
+                <span class="text-sm font-bold text-slate-400 tracking-wider">מחובר למצגת</span>
+            </div>
+            <div id="slide-number" class="text-xl font-bold font-mono text-blue-400">1 / 14</div>
+        </div>
+
+        <div class="fixed top-[72px] left-0 w-full z-10">
+            <div id="progress" class="progress-bar" style="width: 7%;"></div>
+        </div>
+
+        <!-- Speaker Notes & Reminder Area -->
+        <div class="flex-grow p-6 flex flex-col items-center justify-center mt-4">
+            <div class="note-card w-full p-8 min-h-[180px] flex items-center justify-center text-center relative">
+                <div class="absolute -top-3 right-8 bg-blue-600 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">תזכורת למרצה</div>
+                <p id="reminder-text" class="text-2xl font-light leading-snug text-slate-100">
+                    טוען תזכורות...
+                </p>
+            </div>
+        </div>
+
+        <!-- Controls Area -->
+        <div class="h-[42%] flex w-full border-t border-white/5 bg-slate-900/50">
+            <!-- Next Button (Main) -->
+            <button onclick="updateSlide('next')" class="nav-btn next flex-grow bg-blue-600/5 p-8">
+                <div class="flex flex-col items-center">
+                    <div class="w-20 h-20 glass rounded-full flex items-center justify-center mb-4 pulse-border border-blue-500/30">
+                        <svg class="w-12 h-12 text-blue-400 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"></path></svg>
+                    </div>
+                    <span class="text-xl font-bold text-blue-400 tracking-widest uppercase">השקף הבא</span>
+                </div>
+            </button>
+            <!-- Prev Button -->
+            <button onclick="updateSlide('prev')" class="nav-btn prev w-1/3 border-r border-white/5 p-6">
+                <div class="flex flex-col items-center opacity-40">
+                    <svg class="w-7 h-7 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
+                    <span class="text-[10px] font-bold uppercase tracking-[0.2em]">הקודם</span>
+                </div>
+            </button>
+        </div>
+
+        <!-- Help/Footer -->
+        <div class="p-4 glass text-center text-[10px] text-slate-500 uppercase tracking-[0.2em]">
+            משיקום לאוטומציה &copy; 2026 | שלט חכם מבוסס ענן
+        </div>
+    </div>
+
+</body>
+</html>
