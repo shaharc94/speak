@@ -64,7 +64,7 @@
                         let lastMediaCommandTimestamp = Date.now();
                         let lastVideoActionTimestamp = Date.now();
                         let lastZoomCommandTimestamp = Date.now();
-                        let lastNavCommandTimestamp = Date.now();
+                        let lastNavCommandId = '';
 
                         // מניעת כפילויות של מאזינים
                         if (window.unsubscribeStatus) window.unsubscribeStatus();
@@ -75,7 +75,7 @@
                                 console.log("Step 5: New Data received from Firestore:", data);
                                 
                                 // בדיקת שינוי שקף מהשלט (למקרה של דילוג ישיר)
-                                if (data && typeof data.slideIndex === 'number' && data.slideIndex !== lastSlideIndex) {
+                                if (data && typeof data.slideIndex === 'number' && data.slideIndex !== lastSlideIndex && data.slideIndex !== window.currentSlide) {
                                     lastSlideIndex = data.slideIndex;
                                     if (window.goToSlide) {
                                         console.log("Direct slide jump to index:", data.slideIndex);
@@ -84,11 +84,14 @@
                                 }
 
                                 // בדיקת פקודת ניווט (הבא/הקודם)
-                                if (data && data.navCommand && data.navCommand.timestamp > lastNavCommandTimestamp) {
-                                    lastNavCommandTimestamp = data.navCommand.timestamp;
-                                    console.log("Nav Command received:", data.navCommand.type);
-                                    if (data.navCommand.type === 'next') window.nextSlide();
-                                    else if (data.navCommand.type === 'prev') window.prevSlide();
+                                if (data && data.navCommand && data.navCommand.commandId !== lastNavCommandId) {
+                                    lastNavCommandId = data.navCommand.commandId;
+                                    console.log("פקודת ניווט התקבלה מהשלט:", data.navCommand.type);
+                                    if (data.navCommand.type === 'next') {
+                                        if (window.nextSlide) window.nextSlide();
+                                    } else if (data.navCommand.type === 'prev') {
+                                        if (window.prevSlide) window.prevSlide();
+                                    }
                                 }
 
                                 // בדיקת פקודת מדיה (תמונה הבאה/הקודמת)
@@ -247,12 +250,12 @@
             margin-bottom: 1.5rem;
             font-size: 1.5rem;
             line-height: 1.4;
-            opacity: 0;
+            opacity: 0 !important;
             transform: translateX(20px);
             transition: all 0.5s ease;
         }
         .point.revealed {
-            opacity: 1;
+            opacity: 1 !important;
             transform: translateX(0);
         }
         .nav-buttons {
@@ -773,6 +776,7 @@
         const progressBar = document.getElementById('progress');
         const slideCounter = document.getElementById('slideCounter');
         let currentSlide = 0;
+        window.currentSlide = 0;
 
         // Generalized Media Slider Logic
         function updateSlider(slider) {
@@ -873,6 +877,7 @@
             // Check if we are going backwards
             const goingBack = index < currentSlide;
             
+            window.currentSlide = index;
             currentSlide = index;
             slides.forEach((slide, i) => {
                 const isActive = i === index;
@@ -929,11 +934,10 @@
             const points = activeSlide.querySelectorAll('.point:not(.revealed)');
             
             if (points.length > 0) {
-                // Reveal the next point
+                console.log("נמצאו נקודות להצגה - חושף נקודה...");
                 points[0].classList.add('revealed');
-                console.log("Point revealed");
             } else {
-                // No more points, go to next slide
+                console.log("אין יותר נקודות בשקף - עובר לשקף הבא");
                 if (currentSlide < slides.length - 1) {
                     showSlide(currentSlide + 1);
                 }
@@ -945,11 +949,10 @@
             const revealedPoints = activeSlide.querySelectorAll('.point.revealed');
             
             if (revealedPoints.length > 0) {
-                // Hide the last revealed point
+                console.log("מחביא נקודה אחרונה...");
                 revealedPoints[revealedPoints.length - 1].classList.remove('revealed');
-                console.log("Point hidden");
             } else {
-                // No more points to hide, go to previous slide
+                console.log("אין נקודות - חוזר לשקף הקודם");
                 if (currentSlide > 0) {
                     showSlide(currentSlide - 1);
                 }

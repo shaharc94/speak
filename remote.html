@@ -175,12 +175,14 @@
         }
 
         window.updateSlide = async function(direction) {
+            console.log("Sending nav command:", direction);
             try {
                 const remoteDoc = doc(db, 'artifacts', appId, 'public', 'data', 'remote_control', 'status');
                 await setDoc(remoteDoc, { 
                     navCommand: { 
                         type: direction,
-                        timestamp: Date.now() 
+                        timestamp: Date.now(),
+                        commandId: Math.random().toString(36).substring(7)
                     }
                 }, { merge: true });
                 
