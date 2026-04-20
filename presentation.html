@@ -63,6 +63,7 @@
                         let lastSlideIndex = -1;
                         let lastMediaCommandTimestamp = 0;
                         let lastVideoActionTimestamp = 0;
+                        let lastZoomCommandTimestamp = 0;
 
                         // מניעת כפילויות של מאזינים
                         if (window.unsubscribeStatus) window.unsubscribeStatus();
@@ -113,6 +114,15 @@
                                                 activeVideo.pause();
                                             }
                                         }
+                                    }
+                                }
+
+                                // בדיקת פקודת זום (הגדלה/מזעור)
+                                if (data && data.zoomCommand && data.zoomCommand.timestamp > lastZoomCommandTimestamp) {
+                                    lastZoomCommandTimestamp = data.zoomCommand.timestamp;
+                                    console.log("Step 9: Zoom Command received");
+                                    if (window.toggleZoomRemote) {
+                                        window.toggleZoomRemote();
                                     }
                                 }
                             } else {
@@ -326,7 +336,7 @@
             transition: all 0.3s ease;
         }
         /* Zoomed State */
-        .media-container.zoomed {
+        .media-container.zoomed, .image-content.zoomed {
             position: fixed;
             top: 50%;
             left: 50%;
@@ -338,7 +348,7 @@
             z-index: 2000;
             box-shadow: 0 0 100px rgba(0,0,0,0.8);
         }
-        .media-container.zoomed::before {
+        .media-container.zoomed::before, .image-content.zoomed::before {
             content: "";
             position: fixed;
             inset: -200vw;
@@ -346,7 +356,8 @@
             z-index: -1;
             backdrop-filter: blur(10px);
         }
-        .media-container.zoomed img, .media-container.zoomed video {
+        .media-container.zoomed img, .media-container.zoomed video,
+        .image-content.zoomed img, .image-content.zoomed video {
             max-height: 90vh;
             object-fit: contain;
         }
@@ -864,10 +875,10 @@
 
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
-                const zoomed = document.querySelector('.media-container.zoomed');
+                const zoomed = document.querySelector('.media-container.zoomed, .image-content.zoomed');
                 if (zoomed) zoomed.classList.remove('zoomed');
             }
-            if (document.querySelector('.media-container.zoomed')) return;
+            if (document.querySelector('.media-container.zoomed, .image-content.zoomed')) return;
             if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
             if (e.key === 'ArrowLeft') prevSlide();
         });
@@ -877,9 +888,26 @@
             container.classList.toggle('zoomed');
         };
 
+        window.toggleZoomRemote = function() {
+            const activeSlider = document.querySelector('.slide.active .media-slider');
+            if (activeSlider) {
+                const container = activeSlider.querySelector('.media-container');
+                if (container) {
+                    container.classList.toggle('zoomed');
+                }
+            } else {
+                // If no slider, check if there's a standalone image/video in placeholder that we want to toggle?
+                // For now, only handles sliders as per the user's example in slide 2.
+                const activeImageArea = document.querySelector('.slide.active .image-area .image-content');
+                if (activeImageArea) {
+                    activeImageArea.classList.toggle('zoomed');
+                }
+            }
+        };
+
         // Close zoom when clicking background
         document.addEventListener('click', (e) => {
-            const zoomed = document.querySelector('.media-container.zoomed');
+            const zoomed = document.querySelector('.media-container.zoomed, .image-content.zoomed');
             if (zoomed && !zoomed.contains(e.target) && !e.target.closest('.news-image')) {
                 zoomed.classList.remove('zoomed');
             }
