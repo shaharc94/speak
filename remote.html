@@ -230,6 +230,7 @@
         };
 
         window.toggleZoom = async function() {
+            console.log("Zoom toggle button clicked");
             try {
                 const remoteDoc = doc(db, 'artifacts', appId, 'public', 'data', 'remote_control', 'status');
                 await setDoc(remoteDoc, { 
@@ -237,12 +238,13 @@
                         timestamp: Date.now()
                     }
                 }, { merge: true });
+                console.log("Zoom command sent successfully");
                 
                 if (navigator.vibrate) {
                     navigator.vibrate(20);
                 }
             } catch (e) {
-                console.error(e);
+                console.error("Error sending zoom command:", e);
             }
         };
 

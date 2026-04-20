@@ -61,9 +61,9 @@
                         console.log("Step 4: Monitoring document path:", remoteDoc.path);
                         
                         let lastSlideIndex = -1;
-                        let lastMediaCommandTimestamp = 0;
-                        let lastVideoActionTimestamp = 0;
-                        let lastZoomCommandTimestamp = 0;
+                        let lastMediaCommandTimestamp = Date.now();
+                        let lastVideoActionTimestamp = Date.now();
+                        let lastZoomCommandTimestamp = Date.now();
 
                         // מניעת כפילויות של מאזינים
                         if (window.unsubscribeStatus) window.unsubscribeStatus();
@@ -120,9 +120,11 @@
                                 // בדיקת פקודת זום (הגדלה/מזעור)
                                 if (data && data.zoomCommand && data.zoomCommand.timestamp > lastZoomCommandTimestamp) {
                                     lastZoomCommandTimestamp = data.zoomCommand.timestamp;
-                                    console.log("Step 9: Zoom Command received");
-                                    if (window.toggleZoomRemote) {
+                                    console.log("Zoom command received at:", lastZoomCommandTimestamp);
+                                    if (typeof window.toggleZoomRemote === 'function') {
                                         window.toggleZoomRemote();
+                                    } else {
+                                        console.error("window.toggleZoomRemote is not a function!");
                                     }
                                 }
                             } else {
@@ -889,18 +891,21 @@
         };
 
         window.toggleZoomRemote = function() {
+            console.log("Toggling zoom remote...");
             const activeSlider = document.querySelector('.slide.active .media-slider');
             if (activeSlider) {
                 const container = activeSlider.querySelector('.media-container');
                 if (container) {
+                    console.log("Toggling slider zoom");
                     container.classList.toggle('zoomed');
                 }
             } else {
-                // If no slider, check if there's a standalone image/video in placeholder that we want to toggle?
-                // For now, only handles sliders as per the user's example in slide 2.
                 const activeImageArea = document.querySelector('.slide.active .image-area .image-content');
                 if (activeImageArea) {
+                    console.log("Toggling image zoom");
                     activeImageArea.classList.toggle('zoomed');
+                } else {
+                    console.warn("No zoomable content found in active slide");
                 }
             }
         };
