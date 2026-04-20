@@ -175,20 +175,20 @@
         }
 
         window.updateSlide = async function(direction) {
-            let nextIndex = currentSlide;
-            if (direction === 'next' && currentSlide < totalSlides - 1) nextIndex++;
-            if (direction === 'prev' && currentSlide > 0) nextIndex--;
-            
-            if (nextIndex !== currentSlide) {
-                try {
-                    const remoteDoc = doc(db, 'artifacts', appId, 'public', 'data', 'remote_control', 'status');
-                    await setDoc(remoteDoc, { 
-                        slideIndex: nextIndex,
-                        timestamp: Date.now()
-                    }, { merge: true });
-                } catch (e) {
-                    console.error(e);
+            try {
+                const remoteDoc = doc(db, 'artifacts', appId, 'public', 'data', 'remote_control', 'status');
+                await setDoc(remoteDoc, { 
+                    navCommand: { 
+                        type: direction,
+                        timestamp: Date.now() 
+                    }
+                }, { merge: true });
+                
+                if (navigator.vibrate) {
+                    navigator.vibrate(20);
                 }
+            } catch (e) {
+                console.error(e);
             }
         };
 
@@ -318,7 +318,7 @@
                     <div class="w-20 h-20 glass rounded-full flex items-center justify-center mb-4 pulse-border border-blue-500/30">
                         <svg class="w-12 h-12 text-blue-400 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"></path></svg>
                     </div>
-                    <span class="text-xl font-bold text-blue-400 tracking-widest uppercase">השקף הבא</span>
+                    <span class="text-xl font-bold text-blue-400 tracking-widest uppercase">הבא</span>
                 </div>
             </button>
             <!-- Prev Button -->

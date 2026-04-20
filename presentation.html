@@ -64,6 +64,7 @@
                         let lastMediaCommandTimestamp = Date.now();
                         let lastVideoActionTimestamp = Date.now();
                         let lastZoomCommandTimestamp = Date.now();
+                        let lastNavCommandTimestamp = Date.now();
 
                         // מניעת כפילויות של מאזינים
                         if (window.unsubscribeStatus) window.unsubscribeStatus();
@@ -73,13 +74,21 @@
                                 const data = snapshot.data();
                                 console.log("Step 5: New Data received from Firestore:", data);
                                 
-                                // בדיקת שינוי שקף
+                                // בדיקת שינוי שקף מהשלט (למקרה של דילוג ישיר)
                                 if (data && typeof data.slideIndex === 'number' && data.slideIndex !== lastSlideIndex) {
                                     lastSlideIndex = data.slideIndex;
                                     if (window.goToSlide) {
-                                        console.log("Step 6: Executing goToSlide(" + data.slideIndex + ")");
-                                        window.goToSlide(data.slideIndex);
+                                        console.log("Direct slide jump to index:", data.slideIndex);
+                                        window.goToSlide(data.slideIndex, true); // true indicates forced jump
                                     }
+                                }
+
+                                // בדיקת פקודת ניווט (הבא/הקודם)
+                                if (data && data.navCommand && data.navCommand.timestamp > lastNavCommandTimestamp) {
+                                    lastNavCommandTimestamp = data.navCommand.timestamp;
+                                    console.log("Nav Command received:", data.navCommand.type);
+                                    if (data.navCommand.type === 'next') window.nextSlide();
+                                    else if (data.navCommand.type === 'prev') window.prevSlide();
                                 }
 
                                 // בדיקת פקודת מדיה (תמונה הבאה/הקודמת)
@@ -133,6 +142,19 @@
                         }, (error) => {
                             console.error("Firebase Snapshot Error:", error);
                         });
+
+                        // פונקציה לעדכון השלט בשינוי שקף (סנכרון הפוך)
+                        window.updateSpeakerNotes = async function(index) {
+                            try {
+                                const remoteDoc = doc(db, 'artifacts', appId, 'public', 'data', 'remote_control', 'status');
+                                await setDoc(remoteDoc, { 
+                                    slideIndex: index,
+                                    timestamp: Date.now()
+                                }, { merge: true });
+                            } catch(e) {
+                                console.error("Error syncing slide index:", e);
+                            }
+                        };
                     } else {
                         console.log("Step 3: Auth State INACTIVE (Signed out or pending)");
                     }
@@ -225,6 +247,13 @@
             margin-bottom: 1.5rem;
             font-size: 1.5rem;
             line-height: 1.4;
+            opacity: 0;
+            transform: translateX(20px);
+            transition: all 0.5s ease;
+        }
+        .point.revealed {
+            opacity: 1;
+            transform: translateX(0);
         }
         .nav-buttons {
             position: fixed;
@@ -838,13 +867,28 @@
             }
         };
 
-        function showSlide(index) {
+        function showSlide(index, isForced = false) {
             if (index < 0 || index >= slides.length) return;
+            
+            // Check if we are going backwards
+            const goingBack = index < currentSlide;
+            
             currentSlide = index;
             slides.forEach((slide, i) => {
                 const isActive = i === index;
                 slide.classList.toggle('active', isActive);
                 
+                const points = slide.querySelectorAll('.point');
+                points.forEach(p => {
+                    if (isActive) {
+                        // If forced jump or going back, show all points
+                        if (isForced || goingBack) p.classList.add('revealed');
+                        else p.classList.remove('revealed');
+                    } else {
+                        p.classList.remove('revealed');
+                    }
+                });
+
                 // Handle videos: pause when slide is hidden
                 const videos = slide.querySelectorAll('video');
                 videos.forEach(v => {
@@ -859,19 +903,56 @@
             if (slideCounter) {
                 slideCounter.textContent = `${index + 1} / ${slides.length}`;
             }
+
+            // Sync slide index back to Firestore
+            try {
+                const appId = 'rehab-presentation';
+                const firebaseConfig = {
+                    apiKey: "AIzaSyAjsMGgDbat6Tz_LX0MKsk6-yQk83mwb4s",
+                    authDomain: "presentation-36598.firebaseapp.com",
+                    projectId: "presentation-36598"
+                };
+                // Note: Using the already initialized db from the module script above
+                // but since this is a regular script, we need to ensure we can access it
+                // or just rely on the module script updating it when it sees a change.
+                // Actually, the best way is to trigger a custom event or just update the doc.
+                if (window.updateSpeakerNotes) {
+                    window.updateSpeakerNotes(index);
+                }
+            } catch(e) {}
         }
 
         window.goToSlide = showSlide;
 
         function nextSlide() {
-            if (currentSlide < slides.length - 1) {
-                showSlide(currentSlide + 1);
+            const activeSlide = slides[currentSlide];
+            const points = activeSlide.querySelectorAll('.point:not(.revealed)');
+            
+            if (points.length > 0) {
+                // Reveal the next point
+                points[0].classList.add('revealed');
+                console.log("Point revealed");
+            } else {
+                // No more points, go to next slide
+                if (currentSlide < slides.length - 1) {
+                    showSlide(currentSlide + 1);
+                }
             }
         }
 
         function prevSlide() {
-            if (currentSlide > 0) {
-                showSlide(currentSlide - 1);
+            const activeSlide = slides[currentSlide];
+            const revealedPoints = activeSlide.querySelectorAll('.point.revealed');
+            
+            if (revealedPoints.length > 0) {
+                // Hide the last revealed point
+                revealedPoints[revealedPoints.length - 1].classList.remove('revealed');
+                console.log("Point hidden");
+            } else {
+                // No more points to hide, go to previous slide
+                if (currentSlide > 0) {
+                    showSlide(currentSlide - 1);
+                }
             }
         }
 
