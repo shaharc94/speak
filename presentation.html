@@ -534,14 +534,14 @@
     <div class="slide">
         <div class="content-area">
             <h2 class="text-5xl font-bold mb-10 text-blue-400">ההתרסקות: דוח נזק</h2>
-            <div class="point">פברואר 2019: תאונת אופנוע ששינתה את הכל.</div>
-            <div class="point">
+            <div class="point" data-media-index="0">פברואר 2019: תאונת אופנוע ששינתה את הכל.</div>
+            <div class="point" data-media-index="0">
                 <span class="medical-tag">פגיעת ראש</span> דימום מוחי.
             </div>
-            <div class="point">
+            <div class="point" data-media-index="1">
                 <span class="medical-tag">לסת מרוסקת</span> ניתוחים וקיבוע מורכב.
             </div>
-            <div class="point">
+            <div class="point" data-media-index="2">
                 <span class="medical-tag">כריתת טחול</span> טחול שהתפוצץ והוסר בניתוח חירום.
             </div>
         </div>
@@ -565,16 +565,16 @@
     <div class="slide">
         <div class="content-area">
             <h2 class="text-5xl font-bold mb-10 text-blue-400">המחשבה: "הכי מהר והכי טוב"</h2>
-            <div class="point">המחשבה שאני <span class="highlight">צריך לשקם את עצמי</span> - הכי מהר והכי טוב.</div>
-            <div class="point">המטרה בזמן אמת: <span class="highlight">"לאתגר את הגבולות"</span> - להשתפר בכל יום.</div>
-            <div class="point">המסקנה כיום (בדיעבד): <span class="highlight">ניהלתי את השיקום שלי כפרויקט</span>, מבלי שבכלל הבנתי זאת בזמנו.</div>
+            <div class="point" data-media-index="0">המחשבה שאני <span class="highlight">צריך לשקם את עצמי</span> - הכי מהר והכי טוב.</div>
+            <div class="point" data-media-index="0">המטרה בזמן אמת: <span class="highlight">"לאתגר את הגבולות"</span> - להשתפר בכל יום.</div>
+            <div class="point" data-media-index="0">המסקנה כיום (בדיעבד): <span class="highlight">ניהלתי את השיקום שלי כפרויקט</span>, מבלי שבכלל הבנתי זאת בזמנו.</div>
             
             <div class="space-y-4 mb-10">
-                <div class="point">אימון מוחי: שימוש באפליקציות לתרגול קוגניטיבי ולמידה מחדש.</div>
-                <div class="point">חזרה למקורות: תרגול גיטרה ושירה לשיפור המוטוריקה.</div>
+                <div class="point" data-media-index="2">אימון מוחי: שימוש באפליקציות לתרגול קוגניטיבי ולמידה מחדש.</div>
+                <div class="point" data-media-index="1">חזרה למקורות: תרגול גיטרה ושירה לשיפור המוטוריקה.</div>
             </div>
 
-            <div class="point mt-8 pt-8 border-t border-blue-500/20">
+            <div class="point mt-8 pt-8 border-t border-blue-500/20" data-media-index="3">
                 <h3 class="text-3xl font-bold mb-4 text-blue-300">אימון פיזי אינטנסיבי עם אורי הפיזיותרפיסט</h3>
                 <p class="text-2xl italic text-slate-300 leading-relaxed">"אל תוותר לי, תאתגר אותי יותר" - הייתי אומר לאורי הפיזיותרפיסט.</p>
             </div>
@@ -601,10 +601,10 @@
     <div class="slide">
         <div class="content-area">
             <h2 class="text-5xl font-bold mb-10 text-blue-400">הכוח שדוחף קדימה</h2>
-            <div class="point">המשפחה ואמא: היו שם מהשנייה הראשונה, חיפשו פתרונות ודחפו אותי.</div>
-            <div class="point">החברים מהיסודי: החבורה שנשארה איתי מההתחלה ודאגה שלא אוותר.</div>
-            <div class="point">תמיכה עקבית: האנשים שהאמינו בי גם ברגעים הקשים.</div>
-            <div class="point"><span class="highlight">הכרת תודה על הרוח הגבית שאפשרה לי להתמקד בבנייה.</span></div>
+            <div class="point" data-media-index="0">המשפחה ואמא: היו שם מהשנייה הראשונה, חיפשו פתרונות ודחפו אותי.</div>
+            <div class="point" data-media-index="1">החברים מהיסודי: החבורה שנשארה איתי מההתחלה ודאגה שלא אוותר.</div>
+            <div class="point" data-media-index="4">תמיכה עקבית: האנשים שהאמינו בי גם ברגעים הקשים.</div>
+            <div class="point" data-media-index="5"><span class="highlight">הכרת תודה על הרוח הגבית שאפשרה לי להתמקד בבנייה.</span></div>
         </div>
         <div class="image-area">
             <div class="media-slider" data-current-index="0">
@@ -821,18 +821,24 @@
             const slider = btn.closest('.media-slider');
             const items = slider.querySelectorAll('.media-container > *');
             let currentIndex = parseInt(slider.getAttribute('data-current-index') || '0');
-            currentIndex = (currentIndex + 1) % items.length;
-            slider.setAttribute('data-current-index', currentIndex);
-            updateSlider(slider);
+            
+            if (currentIndex < items.length - 1) {
+                currentIndex++;
+                slider.setAttribute('data-current-index', currentIndex);
+                updateSlider(slider);
+            }
         };
 
         window.prevMediaSlider = function(btn) {
             const slider = btn.closest('.media-slider');
             const items = slider.querySelectorAll('.media-container > *');
             let currentIndex = parseInt(slider.getAttribute('data-current-index') || '0');
-            currentIndex = (currentIndex - 1 + items.length) % items.length;
-            slider.setAttribute('data-current-index', currentIndex);
-            updateSlider(slider);
+            
+            if (currentIndex > 0) {
+                currentIndex--;
+                slider.setAttribute('data-current-index', currentIndex);
+                updateSlider(slider);
+            }
         };
 
         // Compatibility for old Slide 3 calls if any
@@ -908,6 +914,26 @@
                     }
                 });
 
+                // Handle media slider: reset or sync with points
+                if (isActive) {
+                    const slider = slide.querySelector('.media-slider');
+                    if (slider) {
+                        let mediaIndex = 0;
+                        if (isForced || goingBack) {
+                            // If showing all points, show media for the last one
+                            const revealed = slide.querySelectorAll('.point.revealed');
+                            if (revealed.length > 0) {
+                                const last = revealed[revealed.length - 1];
+                                if (last.hasAttribute('data-media-index')) {
+                                    mediaIndex = parseInt(last.getAttribute('data-media-index'));
+                                }
+                            }
+                        }
+                        slider.setAttribute('data-current-index', mediaIndex);
+                        updateSlider(slider);
+                    }
+                }
+
                 // Handle videos: pause when slide is hidden
                 const videos = slide.querySelectorAll('video');
                 videos.forEach(v => {
@@ -946,12 +972,34 @@
         function nextSlide() {
             const activeSlide = slides[currentSlide];
             const points = activeSlide.querySelectorAll('.point:not(.revealed)');
+            const slider = activeSlide.querySelector('.media-slider');
             
             if (points.length > 0) {
-                console.log("נמצאו נקודות להצגה - חושף נקודה...");
-                points[0].classList.add('revealed');
+                console.log("נמצאו נקודות להצגה - חושף נקודה ומסנכרן מדיה...");
+                const point = points[0];
+                point.classList.add('revealed');
+                
+                // Sync media to the point's index if defined
+                if (point.hasAttribute('data-media-index') && slider) {
+                    const mediaIndex = parseInt(point.getAttribute('data-media-index'));
+                    slider.setAttribute('data-current-index', mediaIndex);
+                    updateSlider(slider);
+                }
             } else {
-                console.log("אין יותר נקודות בשקף - עובר לשקף הבא");
+                // All points revealed, check if slider has more browseable media
+                if (slider) {
+                    const items = slider.querySelectorAll('.media-container > *');
+                    let currentIndex = parseInt(slider.getAttribute('data-current-index') || '0');
+                    if (currentIndex < items.length - 1) {
+                        console.log("דפדוף במדיה נוספת לפני מעבר שקף...");
+                        currentIndex++;
+                        slider.setAttribute('data-current-index', currentIndex);
+                        updateSlider(slider);
+                        return;
+                    }
+                }
+
+                console.log("אין יותר תוכן בשקף - עובר לשקף הבא");
                 if (currentSlide < slides.length - 1) {
                     showSlide(currentSlide + 1);
                 }
@@ -960,11 +1008,50 @@
 
         function prevSlide() {
             const activeSlide = slides[currentSlide];
-            const revealedPoints = activeSlide.querySelectorAll('.point.revealed');
+            const slider = activeSlide.querySelector('.media-slider');
             
+            // Check if we should go back in media first
+            if (slider) {
+                let currentIndex = parseInt(slider.getAttribute('data-current-index') || '0');
+                
+                // Minimum media index for the current revealed points
+                const currentPoints = activeSlide.querySelectorAll('.point.revealed');
+                let minMediaIndex = 0;
+                if (currentPoints.length > 0) {
+                    const lastPoint = currentPoints[currentPoints.length - 1];
+                    if (lastPoint.hasAttribute('data-media-index')) {
+                        minMediaIndex = parseInt(lastPoint.getAttribute('data-media-index'));
+                    }
+                }
+                
+                if (currentIndex > minMediaIndex) {
+                    console.log("דפדוף מדיה לאחור...");
+                    currentIndex--;
+                    slider.setAttribute('data-current-index', currentIndex);
+                    updateSlider(slider);
+                    return;
+                }
+            }
+
+            const revealedPoints = activeSlide.querySelectorAll('.point.revealed');
             if (revealedPoints.length > 0) {
-                console.log("מחביא נקודה אחרונה...");
-                revealedPoints[revealedPoints.length - 1].classList.remove('revealed');
+                console.log("מחביא נקודה ומסנכרן מדיה לאחור...");
+                const pointToHide = revealedPoints[revealedPoints.length - 1];
+                pointToHide.classList.remove('revealed');
+                
+                // Sync media to the new last point
+                if (slider) {
+                    const remainingPoints = activeSlide.querySelectorAll('.point.revealed');
+                    let mediaIndex = 0;
+                    if (remainingPoints.length > 0) {
+                        const lastRemaining = remainingPoints[remainingPoints.length - 1];
+                        if (lastRemaining.hasAttribute('data-media-index')) {
+                            mediaIndex = parseInt(lastRemaining.getAttribute('data-media-index'));
+                        }
+                    }
+                    slider.setAttribute('data-current-index', mediaIndex);
+                    updateSlider(slider);
+                }
             } else {
                 console.log("אין נקודות - חוזר לשקף הקודם");
                 if (currentSlide > 0) {
