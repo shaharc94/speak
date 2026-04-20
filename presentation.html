@@ -551,11 +551,10 @@
                     <img src="images/news_accident_inform.jpg" alt="News Accident Inform" class="active news-image" onclick="toggleZoom(this)">
                     <img src="images/jaw_surgery.jpg" alt="Jaw Surgery" class="news-image" onclick="toggleZoom(this)">
                     <video src="images/learning_to_walk.mp4" loop playsinline controls></video>
-                    <video src="images/duolingo_spanish_rehab.mp4" loop playsinline controls></video>
                 </div>
                 <div class="media-nav">
                     <button class="media-nav-btn" onclick="prevMediaSlider(this)" title="מדיה קודמת">❮</button>
-                    <span class="media-indicator">1 / 4</span>
+                    <span class="media-indicator">1 / 3</span>
                     <button class="media-nav-btn" onclick="nextMediaSlider(this)" title="מדיה הבאה">❯</button>
                 </div>
             </div>
@@ -585,11 +584,12 @@
                 <div id="media-date" class="text-2xl font-bold mb-4 text-blue-400">אפריל 2019</div>
                 <div class="media-container">
                     <video id="vid-guitar" src="images/guitar_trying_vid.MP4" data-date="אפריל 2019" class="active" loop playsinline controls></video>
+                    <video src="images/duolingo_spanish_rehab.mp4" data-date="יוני 2019" loop playsinline controls></video>
                     <video id="vid-clean" src="images/clean_video.MOV" data-date="דצמבר 2019" loop playsinline controls></video>
                 </div>
                 <div class="media-nav">
                     <button class="media-nav-btn" onclick="prevMediaSlider(this)" title="מדיה קודמת">❮</button>
-                    <span class="media-indicator">1 / 2</span>
+                    <span class="media-indicator">1 / 3</span>
                     <button class="media-nav-btn" onclick="nextMediaSlider(this)" title="מדיה הבאה">❯</button>
                 </div>
             </div>
@@ -606,8 +606,16 @@
             <div class="point"><span class="highlight">הכרת תודה על הרוח הגבית שאפשרה לי להתמקד בבנייה.</span></div>
         </div>
         <div class="image-area">
-            <div class="image-content" style="aspect-ratio: 1200/1600; max-width: 450px;">
-                <img src="images/wheelchair.JPG" alt="Wheelchair">
+            <div class="media-slider" data-current-index="0">
+                <div class="media-container">
+                    <img src="images/mom_jerusalem.jpg" alt="Mom in Jerusalem" class="active news-image" onclick="toggleZoom(this)">
+                    <img src="images/wheelchair.JPG" alt="Wheelchair" class="news-image" onclick="toggleZoom(this)">
+                </div>
+                <div class="media-nav">
+                    <button class="media-nav-btn" onclick="prevMediaSlider(this)" title="מדיה קודמת">❮</button>
+                    <span class="media-indicator">1 / 2</span>
+                    <button class="media-nav-btn" onclick="nextMediaSlider(this)" title="מדיה הבאה">❯</button>
+                </div>
             </div>
         </div>
     </div>
