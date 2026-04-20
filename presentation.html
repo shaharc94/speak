@@ -102,7 +102,13 @@
                                         const activeVideo = document.querySelector('.slide.active video.active') || document.querySelector('.slide.active video');
                                         if (activeVideo) {
                                             if (activeVideo.paused) {
-                                                activeVideo.play().catch(console.error);
+                                                activeVideo.play().catch(error => {
+                                                    console.warn("Play failed, showing activation overlay:", error);
+                                                    if (error.name === 'NotAllowedError') {
+                                                        window.pendingVideoToPlay = activeVideo;
+                                                        document.getElementById('activation-overlay').classList.remove('hidden');
+                                                    }
+                                                });
                                             } else {
                                                 activeVideo.pause();
                                             }
@@ -427,7 +433,7 @@
             background: rgba(15, 23, 42, 0.9);
             backdrop-filter: blur(10px);
             z-index: 9999;
-            display: none;
+            display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
@@ -435,8 +441,8 @@
             text-align: center;
             padding: 2rem;
         }
-        #activation-overlay.active {
-            display: flex;
+        #activation-overlay.hidden {
+            display: none;
         }
         .activation-card {
             background: rgba(30, 41, 59, 0.8);
@@ -812,7 +818,7 @@
         };
 
         window.handleFirstGesture = function() {
-            document.getElementById('activation-overlay').classList.remove('active');
+            document.getElementById('activation-overlay').classList.add('hidden');
             if (window.pendingVideoToPlay) {
                 window.pendingVideoToPlay.play().catch(console.error);
                 window.pendingVideoToPlay = null;
@@ -901,6 +907,16 @@
                 }
             });
         });
+
+        // Logic to handle start of presentation
+        window.startPresentation = function() {
+            const overlay = document.getElementById('start-overlay');
+            overlay.classList.add('hidden');
+            
+            // Try to dummy play a silent video if needed, 
+            // but usually a click is enough to unlock the tab's media context.
+            console.log("Presentation started, media context unlocked.");
+        };
 
         // Ensure any other videos in the presentation also toggle on click
         document.querySelectorAll('video:not(.media-container video)').forEach(v => {
