@@ -152,6 +152,22 @@
                                         }
                                     }
                                 }
+
+                                // בדיקת מצב שלט פעיל (הסתרה/הצגת כפתור פתיחת שלט)
+                                const openRemoteBtn = document.getElementById('openRemoteBtn');
+                                if (openRemoteBtn) {
+                                    const isRemoteActive = data && data.remoteActive === true;
+                                    const isFresh = data && data.lastSeen && (Date.now() - data.lastSeen < 15000); // 15 שניות באפר
+                                    
+                                    if (isRemoteActive && isFresh) {
+                                        openRemoteBtn.style.display = 'none';
+                                    } else {
+                                        // הצגה רק אם אין חלון מקומי פתוח (למנוע הבהובים)
+                                        if (!window.localRemoteWindow || window.localRemoteWindow.closed) {
+                                            openRemoteBtn.style.display = 'flex';
+                                        }
+                                    }
+                                }
                             } else {
                                 console.log("Step 5: Document does not exist yet.");
                             }
@@ -1289,22 +1305,14 @@
             const left = (window.screen.width / 2) - (width / 2);
             const top = (window.screen.height / 2) - (height / 2);
             
-            const remoteWindow = window.open(
+            window.localRemoteWindow = window.open(
                 remoteUrl, 
                 'RemoteControl', 
                 `width=${width},height=${height},left=${left},top=${top},menubar=no,toolbar=no,location=no,status=no,resizable=yes,scrollbars=no`
             );
             
-            if (remoteWindow) {
+            if (window.localRemoteWindow) {
                 document.getElementById('openRemoteBtn').style.display = 'none';
-                
-                // Optional: Show button again if window is closed
-                const checkClosed = setInterval(() => {
-                    if (remoteWindow.closed) {
-                        document.getElementById('openRemoteBtn').style.display = 'flex';
-                        clearInterval(checkClosed);
-                    }
-                }, 1000);
             } else {
                 alert('נא לאפשר חלונות קופצים כדי לפתוח את השלט.');
             }
