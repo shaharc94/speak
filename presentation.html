@@ -35,6 +35,13 @@
         // שימוש במזהה האפליקציה של הסביבה לפתרון בעיות הרשאה
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'rehab-presentation';
 
+        let lastSlideIndex = -1;
+        let lastMediaCommandTimestamp = Date.now();
+        let lastVideoActionTimestamp = Date.now();
+        let lastZoomCommandTimestamp = Date.now();
+        let lastNavCommandId = '';
+        const COMMAND_MAX_AGE = 5000; // 5 seconds
+
         async function initRemoteControl() {
             // תיקון אוטומטי לבעיית דומיין של פיירבייס
             if (window.location.hostname === '127.0.0.1') {
@@ -60,11 +67,6 @@
                         const remoteDoc = doc(db, 'artifacts', appId, 'public', 'data', 'remote_control', 'status');
                         console.log("Step 4: Monitoring document path:", remoteDoc.path);
                         
-                        let lastSlideIndex = -1;
-                        let lastMediaCommandTimestamp = Date.now();
-                        let lastVideoActionTimestamp = Date.now();
-                        let lastZoomCommandTimestamp = Date.now();
-                        let lastNavCommandId = '';
 
                         // מניעת כפילויות של מאזינים
                         if (window.unsubscribeStatus) window.unsubscribeStatus();
@@ -86,44 +88,53 @@
                                 // בדיקת פקודת ניווט (הבא/הקודם)
                                 if (data && data.navCommand && data.navCommand.commandId !== lastNavCommandId) {
                                     lastNavCommandId = data.navCommand.commandId;
-                                    console.log("פקודת ניווט התקבלה מהשלט:", data.navCommand.type);
-                                    if (data.navCommand.type === 'next') {
-                                        if (window.nextSlide) window.nextSlide();
-                                    } else if (data.navCommand.type === 'prev') {
-                                        if (window.prevSlide) window.prevSlide();
+                                    // התעלמות מפקודות ישנות (למניעת קפיצות בחיבור מחדש)
+                                    if (data.navCommand.timestamp > Date.now() - COMMAND_MAX_AGE) {
+                                        console.log("פקודת ניווט התקבלה מהשלט:", data.navCommand.type);
+                                        if (data.navCommand.type === 'next') {
+                                            if (window.nextSlide) window.nextSlide();
+                                        } else if (data.navCommand.type === 'prev') {
+                                            if (window.prevSlide) window.prevSlide();
+                                        }
                                     }
                                 }
 
                                 // בדיקת פקודת מדיה (תמונה הבאה/הקודמת)
                                 if (data && data.mediaCommand && data.mediaCommand.timestamp > lastMediaCommandTimestamp) {
+                                    const age = Date.now() - data.mediaCommand.timestamp;
                                     lastMediaCommandTimestamp = data.mediaCommand.timestamp;
-                                    console.log("Step 7: Media Command received:", data.mediaCommand.type);
                                     
-                                    if (data.mediaCommand.type === 'next' && window.nextMedia) {
-                                        window.nextMedia();
-                                    } else if (data.mediaCommand.type === 'prev' && window.prevMedia) {
-                                        window.prevMedia();
+                                    if (age < COMMAND_MAX_AGE) {
+                                        console.log("Step 7: Media Command received:", data.mediaCommand.type);
+                                        if (data.mediaCommand.type === 'next' && window.nextMedia) {
+                                            window.nextMedia();
+                                        } else if (data.mediaCommand.type === 'prev' && window.prevMedia) {
+                                            window.prevMedia();
+                                        }
                                     }
                                 }
 
                                 // בדיקת פקודת וידאו (ניגון/השהיה)
                                 if (data && data.videoAction && data.videoAction.timestamp > lastVideoActionTimestamp) {
+                                    const age = Date.now() - data.videoAction.timestamp;
                                     lastVideoActionTimestamp = data.videoAction.timestamp;
-                                    console.log("Step 8: Video Action received:", data.videoAction.type);
                                     
-                                    if (data.videoAction.type === 'toggle') {
-                                        const activeVideo = document.querySelector('.slide.active video.active') || document.querySelector('.slide.active video');
-                                        if (activeVideo) {
-                                            if (activeVideo.paused) {
-                                                activeVideo.play().catch(error => {
-                                                    console.warn("Play failed, showing activation overlay:", error);
-                                                    if (error.name === 'NotAllowedError') {
-                                                        window.pendingVideoToPlay = activeVideo;
-                                                        document.getElementById('activation-overlay').classList.remove('hidden');
-                                                    }
-                                                });
-                                            } else {
-                                                activeVideo.pause();
+                                    if (age < COMMAND_MAX_AGE) {
+                                        console.log("Step 8: Video Action received:", data.videoAction.type);
+                                        if (data.videoAction.type === 'toggle') {
+                                            const activeVideo = document.querySelector('.slide.active video.active') || document.querySelector('.slide.active video');
+                                            if (activeVideo) {
+                                                if (activeVideo.paused) {
+                                                    activeVideo.play().catch(error => {
+                                                        console.warn("Play failed, showing activation overlay:", error);
+                                                        if (error.name === 'NotAllowedError') {
+                                                            window.pendingVideoToPlay = activeVideo;
+                                                            document.getElementById('activation-overlay').classList.remove('hidden');
+                                                        }
+                                                    });
+                                                } else {
+                                                    activeVideo.pause();
+                                                }
                                             }
                                         }
                                     }
@@ -131,12 +142,14 @@
 
                                 // בדיקת פקודת זום (הגדלה/מזעור)
                                 if (data && data.zoomCommand && data.zoomCommand.timestamp > lastZoomCommandTimestamp) {
+                                    const age = Date.now() - data.zoomCommand.timestamp;
                                     lastZoomCommandTimestamp = data.zoomCommand.timestamp;
-                                    console.log("Zoom command received at:", lastZoomCommandTimestamp);
-                                    if (typeof window.toggleZoomRemote === 'function') {
-                                        window.toggleZoomRemote();
-                                    } else {
-                                        console.error("window.toggleZoomRemote is not a function!");
+                                    
+                                    if (age < COMMAND_MAX_AGE) {
+                                        console.log("Zoom command received at:", lastZoomCommandTimestamp);
+                                        if (typeof window.toggleZoomRemote === 'function') {
+                                            window.toggleZoomRemote();
+                                        }
                                     }
                                 }
                             } else {
@@ -534,13 +547,13 @@
     <div class="slide">
         <div class="content-area">
             <h2 class="text-5xl font-bold mb-10 text-blue-400">איך הכל התחיל</h2>
-            <div class="point" data-media-index="0">לפני ההתרסקות: האהבה לאופנועים והחופש.</div>
+            <div class="point" data-media-index="0">לפני ההתרסקות: האהבה לאופנועים ולחופש.</div>
             <div class="point" data-media-index="4">פברואר 2019: תאונת אופנוע ששינתה את הכל.</div>
             <div class="point" data-media-index="5">
                 <span class="medical-tag">פגיעת ראש</span> דימום מוחי.
             </div>
             <div class="point" data-media-index="6">
-                <span class="medical-tag">לסת מרוסקת</span> ניתוחים וקיבוע מורכב.
+                <span class="medical-tag">לסת מרוסקת</span> ניתוח וקיבוע מורכב.
             </div>
             <div class="point" data-media-index="7">
                 <span class="medical-tag">טיפול נמרץ</span> מורדם ומונשם במשך שלושה שבועות.
@@ -561,8 +574,8 @@
                     <img src="images/brain_mri.jpeg" alt="Brain MRI" class="news-image" onclick="toggleZoom(this)">
                     <img src="images/jaw_surgery.jpg" alt="Jaw Surgery" class="news-image" onclick="toggleZoom(this)">
                     <img src="images/anesthetized.jpg" alt="Anesthetized" class="news-image" onclick="toggleZoom(this)">
-                    <video src="images/learning_to_walk.mp4" loop playsinline controls></video>
-                    <video src="images/walking_with_sticks_dan.mov" loop playsinline controls></video>
+                    <video src="images/learning_to_walk.mp4" playsinline controls></video>
+                    <video src="images/walking_with_sticks_dan.mov" playsinline controls></video>
                 </div>
                 <div class="media-nav">
                     <button class="media-nav-btn" onclick="prevMediaSlider(this)" title="מדיה קודמת">❮</button>
@@ -578,8 +591,7 @@
         <div class="content-area">
             <h2 class="text-5xl font-bold mb-10 text-blue-400">אני צריך לשקם את עצמי</h2>
             <div class="point" data-media-index="0">המחשבה שאני <span class="highlight">צריך לשקם את עצמי</span> - הכי מהר והכי טוב.</div>
-            <div class="point" data-media-index="0">המטרה בזמן אמת: <span class="highlight">"לאתגר את הגבולות"</span> - להשתפר בכל יום.</div>
-            <div class="point" data-media-index="0">המטרה בזמן אמת: <span class="highlight">"לאתגר את הגבולות"</span> - לא להפסיק להשתפר.</div>
+            <div class="point" data-media-index="0">המטרה בזמן אמת: <span class="highlight">"לאתגר את הגבולות"</span> - להשתפר בכל יום ולא להפסיק להשתפר.</div>
             <div class="space-y-4 mb-10">
                 <div class="point" data-media-index="0">חזרה למקורות: תרגול גיטרה ושירה לשיפור המוטוריקה.</div>
                 <div class="point" data-media-index="1">אימון מוחי: שימוש באפליקציות לתרגול קוגניטיבי ולמידה מחדש.</div>
@@ -596,10 +608,10 @@
             <div class="media-slider" data-current-index="0">
                 <div id="media-date" class="text-2xl font-bold mb-4 text-blue-400">אפריל 2019</div>
                 <div class="media-container">
-                    <video id="vid-guitar" src="images/guitar_trying_amit.MP4" data-date="אפריל 2019" class="active" loop playsinline controls></video>
-                    <video src="images/duolingo_spanish_rehab.mp4" data-date="יוני 2019" loop playsinline controls></video>
-                    <video id="vid-clean" src="images/clean_video.MOV" data-date="דצמבר 2019" loop playsinline controls></video>
-                    <video src="images/toes_to_bar.MOV" data-date="אוקטובר 2020" loop playsinline controls></video>
+                    <video id="vid-guitar" src="images/guitar_trying_amit.MP4" data-date="אפריל 2019" class="active" playsinline controls></video>
+                    <video src="images/duolingo_spanish_rehab.mp4" data-date="יוני 2019" playsinline controls></video>
+                    <video id="vid-clean" src="images/clean_video.MOV" data-date="דצמבר 2019" playsinline controls></video>
+                    <video src="images/toes_to_bar.MOV" data-date="אוקטובר 2020" playsinline controls></video>
                 </div>
                 <div class="media-nav">
                     <button class="media-nav-btn" onclick="prevMediaSlider(this)" title="מדיה קודמת">❮</button>
@@ -630,7 +642,7 @@
                     <img src="images/gon_maor.jpg" alt="Gon and Maor" class="news-image" onclick="toggleZoom(this)">
                     <img src="images/lugasi_tom_shahar_rehab.jpg" alt="Lugasi, Tom and Shahar Rehab" class="news-image" onclick="toggleZoom(this)">
                     <img src="images/cs_friends.jpg" alt="CS Friends" class="news-image" onclick="toggleZoom(this)">
-                    <video src="images/nir_guitar.MOV" loop playsinline controls></video>
+                    <video src="images/nir_guitar.MOV" playsinline controls></video>
                 </div>
                 <div class="media-nav">
                     <button class="media-nav-btn" onclick="prevMediaSlider(this)" title="מדיה קודמת">❮</button>
@@ -645,9 +657,11 @@
     <div class="slide">
         <div class="content-area">
             <h2 class="text-5xl font-bold mb-10 text-blue-400">המלחמה על השגרה: אוטובוסים</h2>
-            <div class="point" data-media-index="0">חזרה ללימודים במקביל לשיקום יום בתל השומר ובמכון רקנאטי.</div>
+            <div class="point" data-media-index="0">חזרה ללימודים במקביל לשיקום יום בתל השומר.</div>
+            <div class="point" data-media-index="0">חזרה ללימודים במקביל לשיקום יום במכון רקנאטי.</div>
             <div class="point" data-media-index="1"><span class="highlight">ללא רישיון נהיגה:</span> מסעות יומיים מפרכים.</div>
-            <div class="point" data-media-index="2" class="italic text-blue-300">מהבית ברמת גן ↔ תל השומר ↔ מכון רקנאטי ↔ חולון (HIT).</div>
+            <div class="point italic text-blue-300" data-media-index="2">מהבית ברמת גן ↔ תל השומר ↔ חולון (HIT).</div>
+            <div class="point italic text-blue-300" data-media-index="2">מהבית ברמת גן ↔ מכון רקנאטי ↔ חולון (HIT).</div>
             <div class="point">נחישות נמדדת ביכולת להגיע ליעד בכל מחיר.</div>
         </div>
         <div class="image-area">
@@ -851,8 +865,11 @@
     <div class="progress-bar" id="progress"></div>
     
     <div class="nav-buttons">
-        <button class="nav-btn" onclick="goToSlide(0)" title="חזרה להתחלה">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        <button id="openRemoteBtn" class="nav-btn" onclick="openRemote()" title="פתח שלט בחלון חדש">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="7" y="2" width="10" height="20" rx="2" ry="2"></rect>
+                <path d="M12 18h.01"></path>
+            </svg>
         </button>
         <button class="nav-btn" onclick="nextSlide()" title="הבא">
             <svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
@@ -982,11 +999,16 @@
                 slide.classList.toggle('active', isActive);
                 
                 const points = slide.querySelectorAll('.point');
-                points.forEach(p => {
+                points.forEach((p, pIndex) => {
                     if (isActive) {
                         // If forced jump or going back, show all points
-                        if (isForced || goingBack) p.classList.add('revealed');
-                        else p.classList.remove('revealed');
+                        if (isForced || goingBack) {
+                            p.classList.add('revealed');
+                        } else {
+                            // Reveal only the first point by default for new slides
+                            if (pIndex === 0) p.classList.add('revealed');
+                            else p.classList.remove('revealed');
+                        }
                     } else {
                         p.classList.remove('revealed');
                     }
@@ -1047,10 +1069,18 @@
 
         window.goToSlide = showSlide;
 
+        let lastPointRevealTime = 0;
         function nextSlide() {
+            const now = Date.now();
             const activeSlide = slides[currentSlide];
             const hiddenPoints = Array.from(activeSlide.querySelectorAll('.point:not(.revealed)'));
             const slider = activeSlide.querySelector('.media-slider');
+
+            // Safety: If we just revealed a point, don't allow jumping to next slide immediately
+            if (hiddenPoints.length === 0 && now - lastPointRevealTime < 400) {
+                console.log("Blocking premature slide jump (cooldown)");
+                return;
+            }
 
             if (slider) {
                 const items = slider.querySelectorAll('.media-container > *');
@@ -1077,6 +1107,7 @@
             if (hiddenPoints.length > 0) {
                 const point = hiddenPoints[0];
                 point.classList.add('revealed');
+                lastPointRevealTime = Date.now();
                 
                 // סנכרון המדיה לנקודה שנחשפה
                 if (point.hasAttribute('data-media-index') && slider) {
@@ -1087,6 +1118,16 @@
             } else {
                 // מעבר לשקף הבא רק אם אין יותר נקודות ואין יותר מדיה
                 if (currentSlide < slides.length - 1) {
+                    // הגנה קשיחה לשקף 3: אם יש עדיין נקודות מוסתרות, אל תעבור שקף
+                    if (currentSlide === 3) {
+                        const stillHidden = activeSlide.querySelectorAll('.point:not(.revealed)');
+                        if (stillHidden.length > 0) {
+                            console.warn("מעבר שקף נחסם: יש עדיין נקודות להציג בשקף 3");
+                            return;
+                        }
+                    }
+                    
+                    console.log("Moving to next slide:", currentSlide + 1);
                     showSlide(currentSlide + 1);
                 }
             }
@@ -1146,7 +1187,12 @@
             }
         }
 
+        let lastKeyTime = 0;
         document.addEventListener('keydown', (e) => {
+            const now = Date.now();
+            if (e.key !== 'Escape' && now - lastKeyTime < 300) return;
+            lastKeyTime = now;
+
             if (e.key === 'Escape') {
                 const zoomed = document.querySelector('.media-container.zoomed, .image-content.zoomed');
                 if (zoomed) zoomed.classList.remove('zoomed');
@@ -1234,6 +1280,35 @@
                 }
             });
         });
+
+        // Function to open remote in a new window
+        window.openRemote = function() {
+            const remoteUrl = 'remote.html';
+            const width = 450;
+            const height = 800;
+            const left = (window.screen.width / 2) - (width / 2);
+            const top = (window.screen.height / 2) - (height / 2);
+            
+            const remoteWindow = window.open(
+                remoteUrl, 
+                'RemoteControl', 
+                `width=${width},height=${height},left=${left},top=${top},menubar=no,toolbar=no,location=no,status=no,resizable=yes,scrollbars=no`
+            );
+            
+            if (remoteWindow) {
+                document.getElementById('openRemoteBtn').style.display = 'none';
+                
+                // Optional: Show button again if window is closed
+                const checkClosed = setInterval(() => {
+                    if (remoteWindow.closed) {
+                        document.getElementById('openRemoteBtn').style.display = 'flex';
+                        clearInterval(checkClosed);
+                    }
+                }, 1000);
+            } else {
+                alert('נא לאפשר חלונות קופצים כדי לפתוח את השלט.');
+            }
+        };
     </script>
 </body>
 </html>
