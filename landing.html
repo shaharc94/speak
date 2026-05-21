@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>משיקום לאוטומציה | הרצאת השראה מאת שחר</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS for animations and styling -->
+    <style>
+        body {
+            font-family: 'Assistant', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            overflow-x: hidden;
+        }
+
+        /* Glassmorphism utilities */
+        .glass {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .glass-card {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Gradients */
+        .text-gradient {
+            background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .bg-gradient-hero {
+            background: radial-gradient(circle at top right, rgba(30, 58, 138, 0.4) 0%, rgba(15, 23, 42, 1) 50%);
+        }
+
+        /* Animations */
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-up {
+            animation: fadeUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            opacity: 0;
+        }
+
+        .delay-100 { animation-delay: 100ms; }
+        .delay-200 { animation-delay: 200ms; }
+        .delay-300 { animation-delay: 300ms; }
+        .delay-400 { animation-delay: 400ms; }
+
+        /* Hover effects */
+        .hover-lift {
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+        }
+        
+        .hover-lift:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.4);
+            border-color: rgba(96, 165, 250, 0.5);
+        }
+
+        /* Decorative blobs */
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: -1;
+            opacity: 0.5;
+        }
+        
+        .blob-1 {
+            background: #3b82f6;
+            width: 400px;
+            height: 400px;
+            top: -100px;
+            right: -100px;
+        }
+        
+        .blob-2 {
+            background: #8b5cf6;
+            width: 300px;
+            height: 300px;
+            bottom: 20%;
+            left: -50px;
+        }
+    </style>
+</head>
+<body class="antialiased relative min-h-screen">
+
+    <!-- Background Blobs -->
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 glass border-b border-white/10">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="text-2xl font-bold text-white tracking-wide">
+                שחר <span class="text-blue-400">.</span>
+            </div>
+            <div class="hidden md:flex gap-8 text-sm font-semibold text-slate-300">
+                <a href="#about" class="hover:text-blue-400 transition">הסיפור</a>
+                <a href="#takeaways" class="hover:text-blue-400 transition">מה מקבלים?</a>
+                <a href="#audience" class="hover:text-blue-400 transition">למי מיועד?</a>
+            </div>
+            <a href="#contact" class="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-full font-semibold transition shadow-[0_0_15px_rgba(37,99,235,0.5)]">
+                הזמן הרצאה
+            </a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden bg-gradient-hero">
+        <div class="container mx-auto px-6">
+            <div class="flex flex-col lg:flex-row items-center gap-12">
+                <div class="lg:w-1/2 text-right z-10">
+                    <div class="inline-block px-4 py-1.5 rounded-full border border-blue-500/30 bg-blue-500/10 text-blue-300 font-semibold text-sm mb-6 animate-fade-up">
+                        הרצאת השראה מרתקת
+                    </div>
+                    <h1 class="text-5xl lg:text-7xl font-extrabold leading-tight mb-6 animate-fade-up delay-100">
+                        משיקום <br />
+                        <span class="text-gradient">לאוטומציה</span>
+                    </h1>
+                    <p class="text-xl lg:text-2xl text-slate-300 mb-8 leading-relaxed animate-fade-up delay-200">
+                        איך בחירה, נחישות וטכנולוגיה יכולים להפוך כל משבר להזדמנות צמיחה חסרת תקדים.
+                    </p>
+                    <div class="flex flex-wrap gap-4 animate-fade-up delay-300">
+                        <a href="#contact" class="px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-full font-bold text-lg transition shadow-[0_0_20px_rgba(37,99,235,0.4)] flex items-center gap-2">
+                            לתיאום הרצאה
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                        </a>
+                        <a href="#about" class="px-8 py-4 glass text-white rounded-full font-bold text-lg hover:bg-white/10 transition border border-white/20">
+                            גלה עוד
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="lg:w-1/2 relative z-10 animate-fade-up delay-400">
+                    <div class="relative rounded-2xl overflow-hidden shadow-2xl border border-white/10">
+                        <!-- תמונת כניסה דרמטית - מורדם ומונשם -->
+                        <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent z-10 pointer-events-none"></div>
+                        <img src="images/anesthetized.jpg" alt="שחר מורדם ומונשם בטיפול נמרץ - תחילת מסע השיקום" class="w-full h-auto object-cover opacity-90 hover:opacity-100 transition duration-700 hover:scale-105 transform origin-center">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="py-20 bg-slate-900/50">
+        <div class="container mx-auto px-6 max-w-5xl text-center">
+            <h2 class="text-3xl md:text-5xl font-bold mb-10">הסיפור שמאחורי <span class="text-blue-400">ההרצאה</span></h2>
+            <div class="flex flex-col lg:flex-row gap-8 items-center">
+                <div class="lg:w-1/2 w-full">
+                    <div class="relative rounded-3xl overflow-hidden shadow-2xl border border-white/10 group">
+                        <img src="images/wheelchair-hospital.jpg" alt="תחילת תהליך השיקום" class="w-full h-[400px] object-cover transition duration-700 transform group-hover:scale-105">
+                        <div class="absolute inset-0 bg-blue-900/20 group-hover:bg-transparent transition duration-500 pointer-events-none"></div>
+                    </div>
+                </div>
+                <div class="lg:w-1/2 w-full glass-card p-8 md:p-12 rounded-3xl text-right text-lg md:text-xl text-slate-300 leading-relaxed space-y-6">
+                    <p>
+                        בפברואר 2019, החיים השתנו ברגע. תאונת אופנוע קשה הובילה לפגיעת ראש חמורה, לסת מרוסקת, ושלושה שבועות של תרדמת במחלקת טיפול נמרץ. מה שהיה נראה כסוף הדרך, התברר כנקודת ההתחלה של המסע החשוב בחיי.
+                    </p>
+                    <p>
+                        השיקום היה ארוך ומפרך – ללמוד ללכת, לדבר ולהניע את הגוף מחדש. במקום לשקוע לייאוש, החלטתי <strong>לנהל את השיקום שלי כפרויקט</strong>. בעזרת תמיכה משפחתית וחברתית אדירה, בניתי שגרה יומיומית של ניצחונות קטנים.
+                    </p>
+                    <p>
+                        ההרצאה "משיקום לאוטומציה" לוקחת אתכם למסע מטלטל מעומק המשבר אל חזרה לחיים, תוך שילוב תובנות על ניהול משאבים אישיים, יציאה מאזור הנוחות, והשימוש בטכנולוגיה ובינה מלאכותית (AI) ככלים יומיומיים לפריצת גבולות בעסקים ובחיים.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- What You Will Gain (Takeaways) -->
+    <section id="takeaways" class="py-24">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-5xl font-bold mb-4">מה תקבלו <span class="text-blue-400">מההרצאה?</span></h2>
+                <p class="text-xl text-slate-400">ארגז כלים מעשי ורוחני להתמודדות עם אתגרי החיים והעבודה</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <!-- Card 1 -->
+                <div class="glass-card p-8 rounded-2xl hover-lift">
+                    <div class="w-14 h-14 bg-blue-500/20 rounded-xl flex items-center justify-center mb-6 text-blue-400">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3 text-white">פרופורציה וחוסן מנטלי</h3>
+                    <p class="text-slate-400">
+                        קבלת כלים מעשיים להתמודדות עם משברים, הבנה עמוקה של פרופורציות בחיים, ואיך לקום מנקודת שפל לעשייה.
+                    </p>
+                </div>
+                
+                <!-- Card 2 -->
+                <div class="glass-card p-8 rounded-2xl hover-lift">
+                    <div class="w-14 h-14 bg-purple-500/20 rounded-xl flex items-center justify-center mb-6 text-purple-400">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3 text-white">החיים כפרויקט</h3>
+                    <p class="text-slate-400">
+                        איך לתרגם מוטיבציה לעשייה בשטח. פירוק מטרות גדולות (כמו שיקום) לצעדים קטנים וישימים בניהול יומיומי.
+                    </p>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="glass-card p-8 rounded-2xl hover-lift">
+                    <div class="w-14 h-14 bg-pink-500/20 rounded-xl flex items-center justify-center mb-6 text-pink-400">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3 text-white">כוחה של סביבה</h3>
+                    <p class="text-slate-400">
+                        הבנת המשמעות הקריטית של בניית מעגלי תמיכה נכונים - משפחה, חברים וקהילה כמכפיל כוח בדרך להצלחה.
+                    </p>
+                </div>
+
+                <!-- Card 4 -->
+                <div class="glass-card p-8 rounded-2xl hover-lift">
+                    <div class="w-14 h-14 bg-cyan-500/20 rounded-xl flex items-center justify-center mb-6 text-cyan-400">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3 text-white">חדשנות ואוטומציה</h3>
+                    <p class="text-slate-400">
+                        איך לרתום את טכנולוגיית ה-AI והאוטומציה לייעול תהליכים בעסק ובחיים האישיים, כדי להתמקד במה שחשוב באמת.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Target Audience -->
+    <section id="audience" class="py-20 bg-slate-900/50 relative overflow-hidden">
+        <div class="container mx-auto px-6 relative z-10">
+            <div class="flex flex-col md:flex-row items-center gap-12">
+                <div class="md:w-1/2 text-right">
+                    <h2 class="text-4xl font-bold mb-6">למי ההרצאה <span class="text-blue-400">מתאימה?</span></h2>
+                    <ul class="space-y-6 text-lg text-slate-300">
+                        <li class="flex items-start gap-4">
+                            <div class="mt-1 bg-blue-500/20 p-1.5 rounded-full text-blue-400">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            </div>
+                            <div>
+                                <strong class="text-white block mb-1">חברות, ארגונים והייטק</strong>
+                                לעובדים ומנהלים הזקוקים לזריקת מוטיבציה, הבנת ניהול משברים ואימוץ טכנולוגיות חדשות.
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-4">
+                            <div class="mt-1 bg-blue-500/20 p-1.5 rounded-full text-blue-400">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            </div>
+                            <div>
+                                <strong class="text-white block mb-1">מוסדות חינוך ואקדמיה</strong>
+                                לסטודנטים ובני נוער רגע לפני יציאה לחיים האמיתיים, כהכנה להתמודדות עם כישלונות והצלחות.
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-4">
+                            <div class="mt-1 bg-blue-500/20 p-1.5 rounded-full text-blue-400">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            </div>
+                            <div>
+                                <strong class="text-white block mb-1">יזמים וקהילות</strong>
+                                לאנשים פרטיים, בעלי עסקים וקבוצות שמחפשים השראה, יציאה מאזור הנוחות, וכלים למינוף עסקי.
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="md:w-1/2">
+                    <div class="grid grid-cols-2 gap-4 items-start">
+                        <!-- אקדמיה ולמידה -->
+                        <div class="h-48 md:h-64 rounded-2xl overflow-hidden shadow-lg border border-white/10 mt-8 group relative">
+                            <div class="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent z-10 pointer-events-none"></div>
+                            <div class="absolute top-4 right-4 z-20 px-3 py-1 rounded-full text-xs font-bold glass text-blue-300 border border-blue-500/30">
+                                אקדמיה ולמידה
+                            </div>
+                            <img src="images/hit campus.jpg" alt="קמפוס HIT - אקדמיה ולמידה" class="absolute inset-0 w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 group-hover:scale-110 transition duration-500 transform">
+                        </div>
+                        
+                        <!-- AI ואוטומציה -->
+                        <div class="h-48 md:h-64 rounded-2xl overflow-hidden shadow-lg border border-white/10 group relative">
+                            <div class="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent z-10 pointer-events-none"></div>
+                            <div class="absolute top-4 right-4 z-20 px-3 py-1 rounded-full text-xs font-bold glass text-purple-300 border border-purple-500/30">
+                                AI ואוטומציה
+                            </div>
+                            <img src="images/ai_work_exact.png" alt="עבודה עם כלי בינה מלאכותית ואוטומציה" class="absolute inset-0 w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 group-hover:scale-110 transition duration-500 transform">
+                        </div>
+                        
+                        <!-- עסקים ומכירות -->
+                        <div class="h-48 md:h-64 rounded-2xl overflow-hidden shadow-lg border border-white/10 mt-4 group relative">
+                            <div class="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent z-10 pointer-events-none"></div>
+                            <div class="absolute top-4 right-4 z-20 px-3 py-1 rounded-full text-xs font-bold glass text-pink-300 border border-pink-500/30">
+                                עסקים ומכירות
+                            </div>
+                            <img src="images/sales.jpg" alt="עולם המכירות והעסקים" class="absolute inset-0 w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 group-hover:scale-110 transition duration-500 transform">
+                        </div>
+                        
+                        <!-- קהילה והשראה -->
+                        <div class="h-48 md:h-64 rounded-2xl overflow-hidden shadow-lg border border-white/10 -mt-4 group relative">
+                            <div class="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent z-10 pointer-events-none"></div>
+                            <div class="absolute top-4 right-4 z-20 px-3 py-1 rounded-full text-xs font-bold glass text-cyan-300 border border-cyan-500/30">
+                                קהילה והשראה
+                            </div>
+                            <img src="images/or_community_meeting.jpg" alt="מפגש קהילה והשראה" class="absolute inset-0 w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 group-hover:scale-110 transition duration-500 transform">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Call to Action / Contact -->
+    <section id="contact" class="py-24 relative">
+        <div class="container mx-auto px-6 max-w-4xl text-center">
+            <div class="glass-card p-12 rounded-[2rem] border-blue-500/30 shadow-[0_0_50px_rgba(37,99,235,0.15)]">
+                <h2 class="text-4xl font-bold mb-6">מוכנים לקבל השראה?</h2>
+                <p class="text-xl text-slate-300 mb-10 max-w-2xl mx-auto">
+                    הזמינו את ההרצאה לארגון שלכם והעניקו לעובדים שלכם פרספקטיבה חדשה על התמודדות עם אתגרים, הצלחה וחדשנות.
+                </p>
+                <div class="flex flex-col sm:flex-row justify-center gap-6 mt-6">
+                    <a href="mailto:shahar@example.com" class="px-10 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-full font-bold text-xl transition shadow-[0_0_25px_rgba(37,99,235,0.6)] hover:shadow-[0_0_35px_rgba(37,99,235,0.8)] flex items-center justify-center gap-3 transform hover:-translate-y-1">
+                        שלח אימייל לתיאום
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                    </a>
+                    <a href="tel:0500000000" class="px-10 py-4 glass text-white rounded-full font-bold text-xl hover:bg-white/10 transition border border-white/20 flex items-center justify-center gap-3 transform hover:-translate-y-1">
+                        חייג עכשיו
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="glass border-t border-white/10 py-8 text-center text-slate-400">
+        <div class="container mx-auto px-6">
+            <p>&copy; 2026 שחר. כל הזכויות שמורות.</p>
+        </div>
+    </footer>
+
+    <!-- Intersection Observer for Scroll Animations -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.1
+            };
+
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.animationPlayState = 'running';
+                        // if we want to re-trigger, we can remove and add the class, but running once is usually fine
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, observerOptions);
+
+            // Actually the fade-up animations are currently running on load due to CSS
+            // For scroll, we can pause them initially
+            const elements = document.querySelectorAll('.animate-fade-up');
+            elements.forEach(el => {
+                el.style.animationPlayState = 'paused';
+                observer.observe(el);
+            });
+        });
+    </script>
+</body>
+</html>
