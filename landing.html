@@ -2,7 +2,7 @@
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>משיקום לאוטומציה | הרצאת השראה מאת שחר</title>
     
     <!-- Tailwind CSS -->
@@ -20,6 +20,7 @@
             overflow-x: hidden;
             width: 100%;
             position: relative;
+            touch-action: pan-y;
         }
 
         /* Glassmorphism utilities */
@@ -92,18 +93,37 @@
         
         .blob-1 {
             background: #3b82f6;
-            width: 400px;
-            height: 400px;
-            top: -100px;
-            right: -100px;
+            width: 200px;
+            height: 200px;
+            top: -50px;
+            right: -50px;
+            will-change: filter;
+            transform: translate3d(0, 0, 0);
+        }
+        @media (min-width: 640px) {
+            .blob-1 {
+                width: 400px;
+                height: 400px;
+                top: -100px;
+                right: -100px;
+            }
         }
         
         .blob-2 {
             background: #8b5cf6;
-            width: 300px;
-            height: 300px;
+            width: 150px;
+            height: 150px;
             bottom: 20%;
-            left: -50px;
+            left: -25px;
+            will-change: filter;
+            transform: translate3d(0, 0, 0);
+        }
+        @media (min-width: 640px) {
+            .blob-2 {
+                width: 300px;
+                height: 300px;
+                left: -50px;
+            }
         }
     </style>
 </head>
